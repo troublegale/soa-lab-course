@@ -1,0 +1,881 @@
+openapi: 3.0.4
+info:
+  title: ITMO SOA Lab Work
+  description: |-
+    API specification for a lab work of a Service-Oriented Architecture course
+    at ITMO Unicersity.
+    
+    - Student: Ivan Kozhukhin
+    - Group: P3418
+    - Class: 1.6
+    - Variant: 8407
+  version: 1.0.0
+servers:
+  - url: https://localhost:8580/api/v1
+tags:
+  - name: Organizations
+    description: Basic organization operations
+  - name: OrgManager
+    description: Advanced organization operations
+  - name: Employees
+    description: Basic employee operations
+paths:
+  /organizations:
+    get:
+      tags:
+        - Organizations
+      summary: Get all organizations
+      description: |-
+        Get organizations by page (optional) without any filters or sorting
+      operationId: getOrgs
+      parameters:
+        - name: page
+          in: query
+          description: Number of the page (default - 1)
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          in: query
+          description: Size of the page (default - 20)
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                xml:
+                  name:
+                    organizations
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Organizations
+      summary: Create an organization
+      description: Create a new organization with set parameters
+      operationId: createOrg
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrganizationRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          headers:
+            Location:
+              description: URL of a created organization
+              schema:
+                type: string
+                example: /organizations/12
+        '400':
+          description: Invalid parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /organizations/query:
+    post:
+      tags:
+        - Organizations
+      summary: Get filtered organizations
+      description: |-
+        Get organizations by page (optional) with filters and sorting
+      operationId: getOrgsQuery
+      parameters:
+        - name: page
+          in: query
+          description: Number of the page (default - 1)
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          in: query
+          description: Size of the page (default - 20)
+          required: false
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrganizationQuery'
+        required: false
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                xml:
+                  name:
+                    organizations
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /organizations/{id}:
+    get:
+      tags:
+        - Organizations
+      summary: Get an organization
+      description: Get an organization by id
+      operationId: getOrgById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Organization id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Organizations
+      summary: Fully update an organization
+      description: Update all of the fields of an organization by id
+      operationId: fullUpdateOrg
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Organization id
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrganizationRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Invalid parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Organizations
+      summary: Delete an organization
+      description: Delete an organization by id
+      operationId: deleteOrgById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Organization id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /organizations/{id}/employees:
+    get:
+      tags:
+        - Organizations
+      summary: Get organization employees
+      description: |-
+        Get employees of an organization by id
+      operationId: getOrgEmployees
+      parameters:
+        - name: id
+          in: path
+          description: Organization id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                xml:
+                  name:
+                    employees
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '404':
+          description: No organiztion with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /employees:
+    post:
+      tags:
+        - Employees
+      summary: Create an employee
+      description: Create a new employee with set parameters
+      operationId: createEmployee
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          headers:
+            Location:
+              description: URL of a created employee
+              schema:
+                type: string
+                example: /employees/12
+        '400':
+          description: Invalid parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /employees/{id}:
+    put:
+      tags:
+        - Employees
+      summary: Update an employee
+      description: Update an employee by id
+      operationId: updateEmployee
+      parameters:
+        - name: id
+          in: path
+          description: Employee id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: No employee or organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid parameters
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Employees
+      summary: Get an employee
+      description: Get an employee by id
+      operationId: getEmployeeById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Employee id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: No employee with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Employees
+      summary: Delete an employee
+      description: Delete an employee by id
+      operationId: deleteEmployeeById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Employee id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: No employee with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /orgmanager/fire/all/{id}:
+    post:
+      tags:
+        - OrgManager
+      summary: Fire employees of an organization
+      description: Fire all employees of an organization by id
+      operationId: fireAllEmployeesByOrgId
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Organization id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EmployeeCount'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /acquire/{acquirer-id}/{acquired-id}:
+    post:
+      tags:
+        - OrgManager
+      summary: Acquire organization
+      description: |-
+        Acquire one organiztion (acquired) by another (acquirer)
+        transfering all employees to acquirer organization
+      operationId: acquire
+      parameters:
+        - name: acquirer-id
+          required: true
+          in: path
+          description: Acquirer organization id
+          schema:
+            type: integer
+            format: int64
+        - name: acquired-id
+          required: true
+          in: path
+          description: Acquired organization id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Acquiring'
+        '404':
+          description: No organization with such id
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: ITMO
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        creationDate:
+          type: string
+          format: date
+          example: 2025-09-26
+        annualTurnover:
+          type: integer
+          format: int64
+          example: 9001
+        fullName:
+          type: string
+          example: ITMO Corporation
+        type:
+          type: string
+          enum:
+            - COMMERCIAL
+            - GOVERNMENT
+            - PRIVATE_LIMITED_COMPANY
+            - OPEN_JOINT_STOCK_COMPANY
+        officialAddress:
+          $ref: '#/components/schemas/Address'
+      xml:
+        name: organization
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Nikola Strawinsky
+        salary:
+          type: integer
+          format: int64
+          example: 1
+        organizationId:
+          type: integer
+          format: int64
+          example: 1
+      xml:
+        name: employee
+    EmployeeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nikola Strawinsky
+        salary:
+          type: integer
+          format: int64
+          example: 1
+        organizationId:
+          type: integer
+          format: int64
+          example: 1
+      required:
+        - name
+        - salary
+        - organizationId
+      xml:
+        name: employeeRequest
+    OrganizationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: ITMO
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        annualTurnover:
+          type: integer
+          format: int64
+          example: 9001
+        fullName:
+          type: string
+          example: ITMO Corporation
+        type:
+          type: string
+          enum:
+            - COMMERCIAL
+            - GOVERNMENT
+            - PRIVATE_LIMITED_COMPANY
+            - OPEN_JOINT_STOCK_COMPANY
+        officialAddress:
+          $ref: '#/components/schemas/Address'
+      required:
+        - name
+        - coordinates
+        - type
+      xml:
+        name: organizationRequest
+    OrganizationQuery:
+      description: All fields are optional
+      type: object
+      properties:
+        sort:
+          type: array
+          items:
+            type: string
+          description: |-
+            Name all sorting parameters, add '-' to the name for descending
+        idFilter:
+          $ref: '#/components/schemas/LongFilter'
+        nameFilter:
+          $ref: '#/components/schemas/StringFilter'
+        coordinatesFilter:
+          $ref: '#/components/schemas/CoordinatesFilter'
+        creationDateFilter:
+          $ref: '#/components/schemas/DateFilter'
+        annualTurnoverFilter:
+          $ref: '#/components/schemas/LongFilter'
+        fullNameFilter:
+          $ref: '#/components/schemas/StringFilter'
+        typeFilter:
+          $ref: '#/components/schemas/TypeFilter'
+        addressFilter:
+          $ref: '#/components/schemas/AddressFilter'
+      xml:
+        name: organizationQuery
+    LongFilter:
+      type: object
+      properties:
+        eq:
+          type: integer
+          format: int64
+        gt:
+          type: integer
+          format: int64
+        ge:
+          type: integer
+          format: int64
+        lt:
+          type: integer
+          format: int64
+        le:
+          type: integer
+          format: int64
+    IntFilter:
+      type: object
+      properties:
+        eq:
+          type: integer
+          format: int32
+        gt:
+          type: integer
+          format: int32
+        ge:
+          type: integer
+          format: int32
+        lt:
+          type: integer
+          format: int32
+        le:
+          type: integer
+          format: int32
+    FloatFilter:
+      properties:
+        eq:
+          type: number
+          format: float
+        gt:
+          type: number
+          format: float
+        ge:
+          type: number
+          format: float
+        lt:
+          type: number
+          format: float
+        le:
+          type: number
+          format: float
+    StringFilter:
+      type: object
+      properties:
+        eq:
+          type: string
+        contains:
+          type: string
+        startsWith:
+          type: string
+        endsWith:
+          type: string
+    DateFilter:
+      type: object
+      properties:
+        eq:
+          type: string
+          format: date
+        before:
+          type: string
+          format: date
+        after:
+          type: string
+          format: date
+    TypeFilter:
+      type: object
+      properties:
+        eq:
+          type: string
+          enum:
+            - COMMERCIAL
+            - GOVERNMENT
+            - PRIVATE_LIMITED_COMPANY
+            - OPEN_JOINT_STOCK_COMPANY
+        in:
+          type: array
+          items:
+            type: string
+            enum:
+              - COMMERCIAL
+              - GOVERNMENT
+              - PRIVATE_LIMITED_COMPANY
+              - OPEN_JOINT_STOCK_COMPANY
+    CoordinatesFilter:
+      type: object
+      properties:
+        xFilter:
+          $ref: '#/components/schemas/IntFilter'
+        yFilter:
+          $ref: '#/components/schemas/LongFilter'
+    AddressFilter:
+      type: object
+      properties:
+        streetFilter:
+          $ref: '#/components/schemas/StringFilter'
+        locationFilter:
+          $ref: '#/components/schemas/LocationFilter'
+    LocationFilter:
+      type: object
+      properties:
+        xFilter:
+          $ref: '#/components/schemas/FloatFilter'
+        yFilter:
+          $ref: '#/components/schemas/IntFilter'
+        nameFilter:
+          $ref: '#/components/schemas/StringFilter'
+    Coordinates:
+      type: object
+      properties:
+        x:
+          type: integer
+          format: int32
+          example: 42
+        y:
+          type: integer
+          format: int64
+          example: 1337
+      required:
+        - x
+      xml:
+        name: coordinates
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          example: Lomonosova 9
+        town:
+          $ref: '#/components/schemas/Location'
+      required:
+        - street
+      xml:
+        name: officialAddress
+    Location:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+          example: 7.8
+        y:
+          type: integer
+          format: int32
+          example: 228
+        name:
+          type: string
+          example: Saint-Petersburg
+      required:
+        - x
+        - y
+        - name
+      xml:
+        name: town
+    Acquiring:
+      description: Result of an acquiring operation
+      type: object
+      properties:
+        acquirerOrganization:
+          allOf:
+            - $ref: '#/components/schemas/Organization'
+          xml:
+            name: acquirerOrganization
+        acquiredOrganization:
+          allOf:
+            - $ref: '#/components/schemas/Organization'
+          xml:
+            name: acquiredOrganization
+        numberOfEmployeesMoved:
+          type: integer
+          format: int64
+      xml:
+        name: acquiring
+    EmployeeCount:
+      type: object
+      properties:
+        number:
+          description: Number of employees fired from the organization
+          type: integer
+          format: int64
+          example: 42
+      xml:
+        name: employeeCount
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      xml:
+        name: error

@@ -1,0 +1,12 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: soa
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+logging:
+  level:
+    root: info
