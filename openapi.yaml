@@ -1,4 +1,4 @@
-openapi: 3.0.4
+openapi: 3.1.0
 info:
   title: ITMO SOA Lab Work
   description: |-
@@ -60,13 +60,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
     post:
       tags:
         - Organizations
@@ -97,13 +97,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /organizations/query:
     post:
       tags:
@@ -150,13 +150,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /organizations/{id}:
     get:
       tags:
@@ -184,13 +184,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
     put:
       tags:
         - Organizations
@@ -223,19 +223,19 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         '404':
           description: No organization with such id
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
     delete:
       tags:
         - Organizations
@@ -262,13 +262,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /organizations/{id}/employees:
     get:
       tags:
@@ -302,13 +302,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /employees:
     post:
       tags:
@@ -340,19 +340,19 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         '404':
           description: No organization with such id
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /employees/{id}:
     put:
       tags:
@@ -386,19 +386,19 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         '400':
           description: Invalid parameters
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
     get:
       tags:
         - Employees
@@ -425,13 +425,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
     delete:
       tags:
         - Employees
@@ -458,13 +458,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /orgmanager/fire/all/{id}:
     post:
       tags:
@@ -492,13 +492,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
   /acquire/{acquirer-id}/{acquired-id}:
     post:
       tags:
@@ -535,13 +535,13 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
         default:
           description: Unexpected error
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/AppError'
 components:
   schemas:
     Organization:
@@ -667,7 +667,7 @@ components:
         creationDateFilter:
           $ref: '#/components/schemas/DateFilter'
         annualTurnoverFilter:
-          $ref: '#/components/schemas/LongFilter'
+          $ref: '#/components/schemas/FloatFilter'
         fullNameFilter:
           $ref: '#/components/schemas/StringFilter'
         typeFilter:
@@ -870,7 +870,7 @@ components:
           example: 42
       xml:
         name: employeeCount
-    Error:
+    AppError:
       type: object
       properties:
         code:
@@ -878,4 +878,4 @@ components:
         message:
           type: string
       xml:
-        name: error
+        name: appError
