@@ -3,7 +3,7 @@ info:
   title: ITMO SOA Lab Work
   description: |-
     API specification for a lab work of a Service-Oriented Architecture course
-    at ITMO Unicersity.
+    at ITMO University.
     
     - Student: Ivan Kozhukhin
     - Group: P3418
@@ -49,12 +49,7 @@ paths:
           content:
             application/xml:
               schema:
-                type: array
-                xml:
-                  name:
-                    organizations
-                items:
-                  $ref: '#/components/schemas/Organization'
+                  $ref: '#/components/schemas/OrganizationsPage'
         '400':
           description: Invalid query parameters
           content:
@@ -139,12 +134,7 @@ paths:
           content:
             application/xml:
               schema:
-                type: array
-                xml:
-                  name:
-                    organizations
-                items:
-                  $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/OrganizationsPage'
         '400':
           description: Invalid query parameters
           content:
@@ -298,11 +288,95 @@ paths:
                 items:
                   $ref: '#/components/schemas/Employee'
         '404':
-          description: No organiztion with such id
+          description: No organization with such id
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /organizations/turnover:
+    get:
+      tags:
+        - Organizations
+      summary: Get total turnover
+      description: Get the sum of annual turnover of all Organizations
+      operationId: totalTurnover
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TurnoverResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /organizations/types:
+    get:
+      tags:
+        - Organizations
+      summary: Get number of organizations of each type
+      description: Get the number of organizations grouped by type
+      operationId: countByType
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/GroupByTypeResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /organizations/lt-fullname:
+    post:
+      tags:
+        - Organizations
+      summary: Get Organizations with fullName less than stated
+      description: Get a list of Organizations by page with the fullName value less than stated in lexicographic order
+      operationId: ltFullName
+      parameters:
+        - name: page
+          in: query
+          description: Number of the page (default - 1)
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          in: query
+          description: Size of the page (default - 20)
+          required: false
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              type: string
+              xml:
+                name:
+                  fullNameValue
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/OrganizationsPage'
         default:
           description: Unexpected error
           content:
@@ -486,7 +560,10 @@ paths:
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/EmployeeCount'
+                type: integer
+                xml:
+                  name:
+                    employeeCount
         '404':
           description: No organization with such id
           content:
@@ -505,8 +582,8 @@ paths:
         - OrgManager
       summary: Acquire organization
       description: |-
-        Acquire one organiztion (acquired) by another (acquirer)
-        transfering all employees to acquirer organization
+        Acquire one organization (acquired) by another (acquirer)
+        transferring all employees to acquirer organization
       operationId: acquire
       parameters:
         - name: acquirer-id
@@ -578,6 +655,24 @@ components:
           $ref: '#/components/schemas/Address'
       xml:
         name: organization
+    OrganizationsPage:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+      xml:
+        name:
+          organizationsPage
     Employee:
       type: object
       properties:
@@ -860,16 +955,25 @@ components:
           format: int64
       xml:
         name: acquiring
-    EmployeeCount:
+    TurnoverResponse:
       type: object
       properties:
-        number:
-          description: Number of employees fired from the organization
+        totalTurnover:
+          type: number
+          format: float
+        organizationCount:
           type: integer
-          format: int64
-          example: 42
-      xml:
-        name: employeeCount
+    GroupByTypeResponse:
+      type: object
+      properties:
+        commercialCount:
+          type: integer
+        governmentCount:
+          type: integer
+        privateLimitedCompanyCount:
+          type: integer
+        openJointStockCompanyCount:
+          type: integer
     AppError:
       type: object
       properties:
