@@ -339,7 +339,7 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-  /organizations/lt-fullname:
+  /organizations/lt-full-name:
     post:
       tags:
         - Organizations

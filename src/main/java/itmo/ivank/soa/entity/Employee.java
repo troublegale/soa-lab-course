@@ -22,7 +22,7 @@ public class Employee {
     private String name;
 
     @Column
-    private Integer salary;
+    private Long salary;
 
     @JoinColumn(name = "organization_id")
     @ManyToOne
