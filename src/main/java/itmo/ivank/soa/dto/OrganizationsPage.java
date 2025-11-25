@@ -6,9 +6,9 @@ import java.util.List;
 
 public record OrganizationsPage(
         List<Organization> organizations,
-        Long page,
-        Long size,
+        Integer page,
+        Integer size,
         Long totalElements,
-        Long totalPages
+        Integer totalPages
 ) {
 }

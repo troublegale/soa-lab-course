@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -62,6 +63,13 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         AppError error = new AppError(404, message);
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidSearchQueryException.class)
+    public ResponseEntity<AppError> handleInvalidSearchQueryException(InvalidSearchQueryException ex) {
+        String message = ex.getMessage();
+        AppError error = new AppError(400, message);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
 }

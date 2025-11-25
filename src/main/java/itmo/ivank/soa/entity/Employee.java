@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "employees")
@@ -26,6 +28,7 @@ public class Employee {
 
     @JoinColumn(name = "organization_id")
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Organization organization;
 
 }

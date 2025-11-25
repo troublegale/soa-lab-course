@@ -1,11 +1,10 @@
 package itmo.ivank.soa.dto.filter;
 
-import itmo.ivank.soa.dto.filter.primitive.IntFilter;
-import itmo.ivank.soa.dto.filter.primitive.LongFilter;
+import itmo.ivank.soa.dto.filter.primitive.NumberFilter;
 import jakarta.validation.Valid;
 
 public record CoordinatesFilter(
-        @Valid IntFilter xFilter,
-        @Valid LongFilter yFilter
+        @Valid NumberFilter<Integer> xFilter,
+        @Valid NumberFilter<Long> yFilter
 ) {
 }

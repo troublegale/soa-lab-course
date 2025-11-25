@@ -965,15 +965,9 @@ components:
           type: integer
     GroupByTypeResponse:
       type: object
-      properties:
-        commercialCount:
-          type: integer
-        governmentCount:
-          type: integer
-        privateLimitedCompanyCount:
-          type: integer
-        openJointStockCompanyCount:
-          type: integer
+      additionalProperties:
+        type: number
+        format: float
     AppError:
       type: object
       properties:

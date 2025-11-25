@@ -4,19 +4,19 @@ import itmo.ivank.soa.dto.filter.AddressFilter;
 import itmo.ivank.soa.dto.filter.CoordinatesFilter;
 import itmo.ivank.soa.dto.filter.primitive.*;
 import jakarta.validation.Valid;
-import org.hibernate.validator.constraints.Length;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public record OrganizationQuery(
-        @Valid @Length(min = 1) List<String> sort,
-        @Valid LongFilter idFilter,
+        @Valid @Size(min = 1) List<String> sort,
+        @Valid NumberFilter<Long> idFilter,
         @Valid StringFilter nameFilter,
         @Valid CoordinatesFilter coordinatesFilter,
         @Valid DateFilter creationDateFilter,
-        @Valid FloatFilter annualTurnoverFilter,
+        @Valid NumberFilter<Float> annualTurnoverFilter,
         @Valid StringFilter fullNameFilter,
         @Valid TypeFilter typeFilter,
-        @Valid AddressFilter addressFilter
+        @Valid AddressFilter officialAddressFilter
 ) {
 }

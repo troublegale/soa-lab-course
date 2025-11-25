@@ -3,6 +3,7 @@ package itmo.ivank.soa.service;
 import itmo.ivank.soa.dto.EmployeeRequest;
 import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.repository.EmployeeRepository;
+import itmo.ivank.soa.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +12,10 @@ import org.springframework.stereotype.Service;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-    private final OrganizationService organizationService;
+    private final OrganizationRepository organizationRepository;
 
     public Employee createEmployee(EmployeeRequest dto) {
-        var org = organizationService.getById(dto.organizationId());
+        var org = organizationRepository.findById(dto.organizationId()).orElseThrow();
         var employee = Employee.builder()
                 .name(dto.name())
                 .salary(dto.salary())
@@ -27,7 +28,7 @@ public class EmployeeService {
         var employee =  employeeRepository.findById(id).orElseThrow();
         employee.setName(dto.name());
         employee.setSalary(dto.salary());
-        employee.setOrganization(organizationService.getById(dto.organizationId()));
+        employee.setOrganization(organizationRepository.findById(dto.organizationId()).orElseThrow());
         return employeeRepository.save(employee);
     }
 
