@@ -75,6 +75,7 @@ public class SpecificationBuilder {
         return spec;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Specification<Organization> addDateFilter(Specification<Organization> spec, String fieldPath, DateFilter filter) {
         if (filter == null) return spec;
         if (filter.eq() != null) {
@@ -92,6 +93,7 @@ public class SpecificationBuilder {
         return spec;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Specification<Organization> addTypeFilter(Specification<Organization> spec, String fieldPath, TypeFilter filter) {
         if (filter == null) return spec;
         if (filter.eq() != null) {
@@ -127,6 +129,7 @@ public class SpecificationBuilder {
         return spec;
     }
 
+    @SuppressWarnings("unchecked")
     private static <T> Expression<T> resolvePath(Root<?> root, String fieldPath) {
         Path<?> path = root;
         for (String part : fieldPath.split("\\.")) {
