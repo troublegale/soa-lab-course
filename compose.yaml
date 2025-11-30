@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
 
-  spring-jaxrs:
+  jaxrs-wildfly:
     build: jax-rs
     ports:
       - '8180:8080'
