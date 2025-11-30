@@ -9,11 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>itmo.ivank</groupId>
-	<artifactId>soa</artifactId>
+	<artifactId>soa-spring</artifactId>
 	<version>dev</version>
 	<packaging>war</packaging>
-	<name>soa</name>
-	<description>SOA Lab</description>
+	<name>soa-spring</name>
+	<description>SOA Spring service</description>
 	<url/>
 	<licenses>
 		<license/>

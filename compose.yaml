@@ -9,6 +9,15 @@ services:
     depends_on:
       - postgres
 
+  spring-jaxrs:
+    build: jax-rs
+    ports:
+      - '8180:8080'
+      - '9991:9990'
+    container_name: soa-jaxrs-wildfly
+    depends_on:
+      - spring-wildfly
+
   postgres:
     image: 'postgres:latest'
     environment:
