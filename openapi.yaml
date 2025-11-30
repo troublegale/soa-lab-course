@@ -11,7 +11,7 @@ info:
     - Variant: 8407
   version: 1.0.0
 servers:
-  - url: https://localhost:8580/api/v1
+  - url: https://localhost:8443/soa-dev/api/v1
 tags:
   - name: Organizations
     description: Basic organization operations
