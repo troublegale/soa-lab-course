@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>itmo.ivank</groupId>
 	<artifactId>soa</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>dev</version>
 	<packaging>war</packaging>
 	<name>soa</name>
 	<description>SOA Lab</description>
