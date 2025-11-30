@@ -1,11 +1,11 @@
 services:
 
-  wildfly:
-    build: .
+  spring-wildfly:
+    build: spring
     ports:
       - '8443:8443'
       - '9990:9990'
-    container_name: soa-wildfly
+    container_name: soa-spring-wildfly
     depends_on:
       - postgres
 
