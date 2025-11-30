@@ -3,7 +3,7 @@ services:
   wildfly:
     build: .
     ports:
-      - '8080:8080'
+      - '8443:8443'
       - '9990:9990'
     container_name: soa-wildfly
     depends_on:
