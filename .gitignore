@@ -1,2 +1,2 @@
-jax-rs/.idea
-spring/.idea
+jax-rs/.idea/*
+spring/.idea/*
