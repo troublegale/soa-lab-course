@@ -68,10 +68,10 @@ public class OrganizationController {
     }
 
     @PostMapping(path = "/lt-full-name",  consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull String value,
+    OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull String fullNameValue,
                                                        @RequestParam(defaultValue = "1") @Valid Integer page,
                                                        @RequestParam(defaultValue = "20") @Valid Integer size) {
-        return null;
+        return organizationService.getOrganizationsLessThanFullName(fullNameValue, page, size);
     }
 
 }

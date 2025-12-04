@@ -108,4 +108,8 @@ public class OrganizationService {
         }
     }
 
+    public OrganizationsPage getOrganizationsLessThanFullName(String value,  Integer page, Integer size) {
+        return null;
+    }
+
 }
