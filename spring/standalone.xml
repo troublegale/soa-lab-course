@@ -336,28 +336,19 @@
             </sasl>
             <tls>
                 <key-stores>
-<!--                    <key-store name="applicationKS">-->
-<!--                        <credential-reference clear-text="password"/>-->
-<!--                        <implementation type="JKS"/>-->
-<!--                        <file path="application.keystore" relative-to="jboss.server.config.dir"/>-->
-<!--                    </key-store>-->
-                    <key-store name="soaKeyStore">
-                        <credential-reference clear-text="secret123"/>
+                    <key-store name="applicationKS">
+                        <credential-reference clear-text="password"/>
                         <implementation type="JKS"/>
-                        <file path="soa-spring.keystore" relative-to="jboss.server.config.dir"/>
+                        <file path="application.keystore" relative-to="jboss.server.config.dir"/>
                     </key-store>
                 </key-stores>
                 <key-managers>
-<!--                    <key-manager name="applicationKM" key-store="applicationKS" generate-self-signed-certificate-host="localhost">-->
-<!--                        <credential-reference clear-text="password"/>-->
-<!--                    </key-manager>-->
-                    <key-manager name="soaKeyManager" key-store="soaKeyStore">
-                        <credential-reference clear-text="secret123"/>
+                    <key-manager name="applicationKM" key-store="applicationKS" generate-self-signed-certificate-host="localhost">
+                        <credential-reference clear-text="password"/>
                     </key-manager>
                 </key-managers>
                 <server-ssl-contexts>
-<!--                    <server-ssl-context name="applicationSSC" key-manager="applicationKM"/>-->
-                    <server-ssl-context name="soaSslContext" key-manager="soaKeyManager"/>
+                    <server-ssl-context name="applicationSSC" key-manager="applicationKM"/>
                 </server-ssl-contexts>
             </tls>
             <policy name="jacc">
@@ -485,7 +476,7 @@
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
-                <https-listener name="https" socket-binding="https" ssl-context="soaSslContext" enable-http2="true"/>
+                <https-listener name="https" socket-binding="https" ssl-context="applicationSSC" enable-http2="true"/>
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
                     <http-invoker http-authentication-factory="application-http-authentication"/>
@@ -521,13 +512,10 @@
         <interface name="public">
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>
         </interface>
-        <interface name="loopback">
-            <inet-address value="127.0.0.1"/>
-        </interface>
     </interfaces>
     <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
         <socket-binding name="ajp" port="${jboss.ajp.port:8009}"/>
-        <socket-binding name="http" interface="loopback" port="${jboss.http.port:8080}"/>
+        <socket-binding name="http" port="${jboss.http.port:8080}"/>
         <socket-binding name="https" port="${jboss.https.port:8443}"/>
         <socket-binding name="management-http" interface="management" port="${jboss.management.http.port:9990}"/>
         <socket-binding name="management-https" interface="management" port="${jboss.management.https.port:9993}"/>
