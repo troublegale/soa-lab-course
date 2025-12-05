@@ -71,14 +71,15 @@ public class OrganizationService {
         organizationRepository.delete(organization);
     }
 
-    public List<Employee> getEmployees(Long id) {
+    public EmployeesResponse getEmployees(Long id) {
         var organization = getById(id);
-        return employeeRepository.findByOrganization(organization);
+        return new EmployeesResponse(employeeRepository.findByOrganization(organization));
     }
 
     public TurnoverResponse getTotalTurnover() {
         List<Organization> organizations = organizationRepository.findAll();
-        Float total = organizations.stream().map(Organization::getAnnualTurnover).reduce(0.0f, Float::sum);
+        Double total = organizations.stream().map(org ->
+                Double.valueOf(org.getAnnualTurnover())).reduce(0.0, Double::sum);
         return new TurnoverResponse(total, organizations.size());
     }
 

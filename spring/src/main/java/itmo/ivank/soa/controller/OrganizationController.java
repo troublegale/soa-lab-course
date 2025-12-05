@@ -53,7 +53,7 @@ public class OrganizationController {
     }
 
     @GetMapping(path = "/{id}/employees", produces = MediaType.APPLICATION_XML_VALUE)
-    List<Employee> getOrganizationEmployees(@PathVariable @Valid Long id) {
+    EmployeesResponse getOrganizationEmployees(@PathVariable @Valid Long id) {
         return organizationService.getEmployees(id);
     }
 
