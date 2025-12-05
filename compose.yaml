@@ -3,8 +3,12 @@ services:
   spring-wildfly:
     build: spring
     ports:
-      - '8080:8080'
+      - '8443:8443'
       - '9990:9990'
+    environment:
+      JAVA_OPTS_APPEND: >
+        -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
+        -Djavax.net.ssl.trustStorePassword=changeit
     container_name: soa-spring-wildfly
     depends_on:
       - postgres
@@ -12,8 +16,12 @@ services:
   jaxrs-wildfly:
     build: jax-rs
     ports:
-      - '8180:8080'
+      - '8444:8443'
       - '9991:9990'
+    environment:
+      JAVA_OPTS_APPEND: >
+        -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
+        -Djavax.net.ssl.trustStorePassword=changeit
     container_name: soa-jaxrs-wildfly
     depends_on:
       - spring-wildfly
@@ -32,7 +40,7 @@ services:
   swagger-ui:
     image: swaggerapi/swagger-ui
     ports:
-      - "8081:8080"
+      - "8180:8080"
     environment:
       SWAGGER_JSON: /mnt/openapi.yaml
     volumes:

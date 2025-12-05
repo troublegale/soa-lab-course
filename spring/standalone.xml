@@ -336,19 +336,38 @@
             </sasl>
             <tls>
                 <key-stores>
-                    <key-store name="applicationKS">
-                        <credential-reference clear-text="password"/>
+<!--                    <key-store name="applicationKS">-->
+<!--                        <credential-reference clear-text="password"/>-->
+<!--                        <implementation type="JKS"/>-->
+<!--                        <file path="application.keystore" relative-to="jboss.server.config.dir"/>-->
+<!--                    </key-store>-->
+                    <key-store name="serverKeyStore">
+                        <credential-reference clear-text="changeit"/>
                         <implementation type="JKS"/>
-                        <file path="application.keystore" relative-to="jboss.server.config.dir"/>
+                        <file path="spring.keystore" relative-to="jboss.server.config.dir"/>
+                    </key-store>
+                    <key-store name="trustStore">
+                        <credential-reference clear-text="changeit"/>
+                        <implementation type="JKS"/>
+                        <file path="truststore.jks" relative-to="jboss.server.config.dir"/>
                     </key-store>
                 </key-stores>
                 <key-managers>
-                    <key-manager name="applicationKM" key-store="applicationKS" generate-self-signed-certificate-host="localhost">
-                        <credential-reference clear-text="password"/>
+<!--                    <key-manager name="applicationKM" key-store="applicationKS" generate-self-signed-certificate-host="localhost">-->
+<!--                        <credential-reference clear-text="password"/>-->
+<!--                    </key-manager>-->
+                    <key-manager name="serverKeyManager" key-store="serverKeyStore">
+                        <credential-reference clear-text="changeit"/>
                     </key-manager>
                 </key-managers>
+                <trust-managers>
+                    <trust-manager name="serverTrustManager" key-store="trustStore"/>
+                </trust-managers>
                 <server-ssl-contexts>
-                    <server-ssl-context name="applicationSSC" key-manager="applicationKM"/>
+<!--                    <server-ssl-context name="applicationSSC" key-manager="applicationKM"/>-->
+                    <server-ssl-context name="sslContext"
+                                        key-manager="serverKeyManager"
+                                        trust-manager="serverTrustManager"/>
                 </server-ssl-contexts>
             </tls>
             <policy name="jacc">
@@ -476,7 +495,8 @@
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
-                <https-listener name="https" socket-binding="https" ssl-context="applicationSSC" enable-http2="true"/>
+<!--                <https-listener name="https" socket-binding="https" ssl-context="applicationSSC" enable-http2="true"/>-->
+                <https-listener name="https" socket-binding="https" ssl-context="sslContext" enable-http2="true"/>
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
                     <http-invoker http-authentication-factory="application-http-authentication"/>
