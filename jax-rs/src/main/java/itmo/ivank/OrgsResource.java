@@ -34,9 +34,7 @@ public class OrgsResource {
     @Produces(MediaType.APPLICATION_XML)
     public String getOrganization(@PathParam("id") Long id) { // ← получаем id
         try (Client client = ClientBuilder.newClient()) {
-            // Строим полный URL: .../organizations/{id}
             String targetUrl = SPRING_URL + "/" + id;
-
             Response resp = client.target(targetUrl)
                     .request()
                     .header("Connection", "close")
