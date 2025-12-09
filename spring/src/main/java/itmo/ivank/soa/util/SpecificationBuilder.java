@@ -29,6 +29,12 @@ public class SpecificationBuilder {
         return spec;
     }
 
+    public static Specification<Organization> buildFullNameLTSpecification(String value) {
+        Specification<Organization> spec = Specification.unrestricted();
+        return spec.and((root, query, cb) ->
+                cb.lessThan(root.get("fullName"), value));
+    }
+
     private static <T extends Number> Specification<Organization> addNumberFilter(Specification<Organization> spec, String fieldPath, NumberFilter<T> filter) {
         if (filter == null) return spec;
         if (filter.eq() != null) {

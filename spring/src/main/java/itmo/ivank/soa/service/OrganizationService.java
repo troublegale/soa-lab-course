@@ -1,6 +1,7 @@
 package itmo.ivank.soa.service;
 
 import itmo.ivank.soa.dto.*;
+import itmo.ivank.soa.dto.filter.primitive.StringFilter;
 import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.entity.Organization;
 import itmo.ivank.soa.entity.OrganizationType;
@@ -109,8 +110,16 @@ public class OrganizationService {
         }
     }
 
-    public OrganizationsPage getOrganizationsLessThanFullName(String value,  Integer page, Integer size) {
-        return null;
+    public OrganizationsPage getOrganizationsLessThanFullName(String value, Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Organization> p = organizationRepository.findAllByFullNameIsLessThan(value, pageable);
+        return new OrganizationsPage(
+                p.getContent(),
+                p.getNumber() + 1,
+                p.getSize(),
+                p.getTotalElements(),
+                p.getTotalPages()
+        );
     }
 
 }

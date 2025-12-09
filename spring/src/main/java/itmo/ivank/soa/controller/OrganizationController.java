@@ -20,57 +20,57 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping(produces = MediaType.APPLICATION_XML_VALUE)
-    OrganizationsPage getAllOrganizations(@RequestParam(defaultValue = "1") @Valid Integer page,
-                                          @RequestParam(defaultValue = "20") @Valid Integer size) {
+    public OrganizationsPage getAllOrganizations(@RequestParam(defaultValue = "1") @Valid Integer page,
+                                                 @RequestParam(defaultValue = "20") @Valid Integer size) {
         return organizationService.getAll(page, size);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    Organization createOrganization(@RequestBody @Valid @NotNull OrganizationRequest request) {
+    public Organization createOrganization(@RequestBody @Valid @NotNull OrganizationRequest request) {
         return organizationService.create(request);
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    OrganizationsPage getFilteredOrganizations(@RequestParam(defaultValue = "1") @Valid Integer page,
-                                               @RequestParam(defaultValue = "20") @Valid Integer size,
-                                               @RequestBody @Valid @NotNull OrganizationQuery query) {
+    public OrganizationsPage getFilteredOrganizations(@RequestParam(defaultValue = "1") @Valid Integer page,
+                                                      @RequestParam(defaultValue = "20") @Valid Integer size,
+                                                      @RequestBody @Valid @NotNull OrganizationQuery query) {
         return organizationService.getFiltered(page, size, query);
     }
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_XML_VALUE)
-    Organization getOrganization(@PathVariable @Valid Long id) {
+    public Organization getOrganization(@PathVariable @Valid Long id) {
         return organizationService.getById(id);
     }
 
-    @PutMapping(path = "/{id}",  consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    Organization updateOrganization(@PathVariable @Valid Long id, @RequestBody @Valid @NotNull OrganizationRequest request) {
+    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
+    public Organization updateOrganization(@PathVariable @Valid Long id, @RequestBody @Valid @NotNull OrganizationRequest request) {
         return organizationService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    void deleteOrganization(@PathVariable @Valid Long id) {
+    public void deleteOrganization(@PathVariable @Valid Long id) {
         organizationService.delete(id);
     }
 
     @GetMapping(path = "/{id}/employees", produces = MediaType.APPLICATION_XML_VALUE)
-    EmployeesResponse getOrganizationEmployees(@PathVariable @Valid Long id) {
+    public EmployeesResponse getOrganizationEmployees(@PathVariable @Valid Long id) {
         return organizationService.getEmployees(id);
     }
 
     @GetMapping(path = "/turnover", produces = MediaType.APPLICATION_XML_VALUE)
-    TurnoverResponse getTotalTurnover() {
+    public TurnoverResponse getTotalTurnover() {
         return organizationService.getTotalTurnover();
     }
 
     @GetMapping(path = "/types", produces = MediaType.APPLICATION_XML_VALUE)
-    List<TypeCount> getOrganizationTypesCount() {
+    public List<TypeCount> getOrganizationTypesCount() {
         return organizationService.getOrganizationTypesCount();
     }
 
-    @PostMapping(path = "/lt-full-name",  consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull String fullNameValue,
-                                                       @RequestParam(defaultValue = "1") @Valid Integer page,
-                                                       @RequestParam(defaultValue = "20") @Valid Integer size) {
+    @PostMapping(path = "/lt-full-name", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
+    public OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull String fullNameValue,
+                                                              @RequestParam(defaultValue = "1") @Valid Integer page,
+                                                              @RequestParam(defaultValue = "20") @Valid Integer size) {
         return organizationService.getOrganizationsLessThanFullName(fullNameValue, page, size);
     }
 

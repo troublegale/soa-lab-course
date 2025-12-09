@@ -1,6 +1,7 @@
 package itmo.ivank.soa.controller;
 
 import itmo.ivank.soa.dto.EmployeeRequest;
+import itmo.ivank.soa.dto.EmployeesResponse;
 import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.service.EmployeeService;
 import jakarta.validation.Valid;
@@ -8,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/employees")
@@ -17,15 +20,15 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE,
-    produces = MediaType.APPLICATION_XML_VALUE)
+            produces = MediaType.APPLICATION_XML_VALUE)
     public Employee createEmployee(@RequestBody @Valid @NotNull EmployeeRequest request) {
-        return employeeService.createEmployee(request);
+        return employeeService.create(request);
     }
 
     @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_XML_VALUE,
             produces = MediaType.APPLICATION_XML_VALUE)
     public Employee updateEmployee(@PathVariable Long id, @RequestBody @Valid @NotNull EmployeeRequest request) {
-        return employeeService.updateEmployee(id, request);
+        return employeeService.update(id, request);
     }
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_XML_VALUE)
@@ -34,8 +37,24 @@ public class EmployeeController {
     }
 
     @DeleteMapping(path = "/{id}")
-    void deleteEmployee(@PathVariable Long id) {
+    public void deleteEmployee(@PathVariable Long id) {
         employeeService.deleteById(id);
     }
 
+    @PostMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE,
+            produces = MediaType.APPLICATION_XML_VALUE)
+    public EmployeesResponse createBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
+        return employeeService.createBatch(employees);
+    }
+
+    @PutMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE,
+            produces = MediaType.APPLICATION_XML_VALUE)
+    public EmployeesResponse updateBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
+        return employeeService.updateBatch(employees);
+    }
+
+    @DeleteMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE)
+    public void deleteBatch(@RequestBody @Valid @NotNull List<Long> ids) {
+        employeeService.deleteBatch(ids);
+    }
 }
