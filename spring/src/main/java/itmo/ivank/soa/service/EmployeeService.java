@@ -1,7 +1,7 @@
 package itmo.ivank.soa.service;
 
 import itmo.ivank.soa.dto.EmployeeRequest;
-import itmo.ivank.soa.dto.EmployeesResponse;
+import itmo.ivank.soa.dto.EmployeesList;
 import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.repository.EmployeeRepository;
 import itmo.ivank.soa.repository.OrganizationRepository;
@@ -51,12 +51,12 @@ public class EmployeeService {
     }
 
     @Transactional
-    public EmployeesResponse createBatch(List<EmployeeRequest> batch) {
+    public EmployeesList createBatch(List<EmployeeRequest> batch) {
         List<Employee> employees = new ArrayList<>();
         for (var dto : batch) {
             employees.add(create(dto));
         }
-        return new EmployeesResponse(employees);
+        return new EmployeesList(employees);
     }
 
     @Transactional
@@ -65,13 +65,13 @@ public class EmployeeService {
     }
 
     @Transactional
-    public EmployeesResponse updateBatch(List<EmployeeRequest> batch) {
+    public EmployeesList updateBatch(List<EmployeeRequest> batch) {
         List<Employee> employees = new ArrayList<>();
         for (var emp : batch) {
             if (emp.id() == null || !employeeRepository.existsById(emp.id())) throw new NoSuchElementException();
             employees.add(update(emp.id(), emp));
         }
-        return new EmployeesResponse(employees);
+        return new EmployeesList(employees);
     }
 
 }

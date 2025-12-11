@@ -8,7 +8,7 @@ import itmo.ivank.soa.entity.Employee;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "employees")
-public record EmployeesResponse(
+public record EmployeesList(
         @JacksonXmlElementWrapper(useWrapping = false)
         @JacksonXmlProperty(localName = "employee")
         List<Employee> employees

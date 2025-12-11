@@ -1,7 +1,6 @@
 package itmo.ivank.soa.controller;
 
 import itmo.ivank.soa.dto.*;
-import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.entity.Organization;
 import itmo.ivank.soa.service.OrganizationService;
 import jakarta.validation.Valid;
@@ -53,7 +52,7 @@ public class OrganizationController {
     }
 
     @GetMapping(path = "/{id}/employees", produces = MediaType.APPLICATION_XML_VALUE)
-    public EmployeesResponse getOrganizationEmployees(@PathVariable @Valid Long id) {
+    public EmployeesList getOrganizationEmployees(@PathVariable @Valid Long id) {
         return organizationService.getEmployees(id);
     }
 
@@ -72,6 +71,12 @@ public class OrganizationController {
                                                               @RequestParam(defaultValue = "1") @Valid Integer page,
                                                               @RequestParam(defaultValue = "20") @Valid Integer size) {
         return organizationService.getOrganizationsLessThanFullName(fullNameValue, page, size);
+    }
+
+    @PostMapping(path = "/compensate", consumes = MediaType.APPLICATION_XML_VALUE,
+            produces = MediaType.APPLICATION_XML_VALUE)
+    public Organization compensateOrganization(@RequestBody @Valid @NotNull OrganizationRequest request) {
+        return organizationService.createRaw(request);
     }
 
 }

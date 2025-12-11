@@ -15,7 +15,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class EmployeesResponse {
+public class EmployeesList {
+
     private List<Employee> employees;
 
     @XmlElement(name = "employee")

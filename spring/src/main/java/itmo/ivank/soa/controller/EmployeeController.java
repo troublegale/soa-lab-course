@@ -1,7 +1,7 @@
 package itmo.ivank.soa.controller;
 
 import itmo.ivank.soa.dto.EmployeeRequest;
-import itmo.ivank.soa.dto.EmployeesResponse;
+import itmo.ivank.soa.dto.EmployeesList;
 import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.service.EmployeeService;
 import jakarta.validation.Valid;
@@ -41,20 +41,21 @@ public class EmployeeController {
         employeeService.deleteById(id);
     }
 
-    @PostMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE,
+    @PostMapping(path = "/batch/create", consumes = MediaType.APPLICATION_XML_VALUE,
             produces = MediaType.APPLICATION_XML_VALUE)
-    public EmployeesResponse createBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
+    public EmployeesList createBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
         return employeeService.createBatch(employees);
     }
 
-    @PutMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE,
+    @PostMapping(path = "/batch/update", consumes = MediaType.APPLICATION_XML_VALUE,
             produces = MediaType.APPLICATION_XML_VALUE)
-    public EmployeesResponse updateBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
+    public EmployeesList updateBatch(@RequestBody @Valid @NotNull List<EmployeeRequest> employees) {
         return employeeService.updateBatch(employees);
     }
 
-    @DeleteMapping(path = "/batch", consumes = MediaType.APPLICATION_XML_VALUE)
+    @PostMapping(path = "/batch/delete", consumes = MediaType.APPLICATION_XML_VALUE)
     public void deleteBatch(@RequestBody @Valid @NotNull List<Long> ids) {
         employeeService.deleteBatch(ids);
     }
+
 }

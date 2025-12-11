@@ -9,8 +9,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
+import java.time.LocalDate;
+
 public record OrganizationRequest(
+        @Positive Long id,
         @NotNull @NotBlank String name,
+        LocalDate creationDate,
         @Valid @NotNull Coordinates coordinates,
         @NotNull @Positive Float annualTurnover,
         @Pattern(regexp = "^(?!\\s*$).+") String fullName,

@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EmployeeRequest  {
 
+    private Long id;
     private String name;
     private Long salary;
     private Long organizationId;
+
 }

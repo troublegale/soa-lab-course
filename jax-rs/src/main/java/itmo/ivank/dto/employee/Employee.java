@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Employee {
+
     private Long id;
     private String name;
-    Long salary;
-    Organization organization;
+    private Long salary;
+    private Organization organization;
+
 }

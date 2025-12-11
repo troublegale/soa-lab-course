@@ -1,8 +1,6 @@
 package itmo.ivank.soa.service;
 
 import itmo.ivank.soa.dto.*;
-import itmo.ivank.soa.dto.filter.primitive.StringFilter;
-import itmo.ivank.soa.entity.Employee;
 import itmo.ivank.soa.entity.Organization;
 import itmo.ivank.soa.entity.OrganizationType;
 import itmo.ivank.soa.exception.InvalidSearchQueryException;
@@ -56,6 +54,20 @@ public class OrganizationService {
         return organizationRepository.save(organization);
     }
 
+    public Organization createRaw(OrganizationRequest dto) {
+        var organization = Organization.builder()
+                .id(dto.id())
+                .name(dto.name())
+                .creationDate(dto.creationDate())
+                .coordinates(dto.coordinates())
+                .annualTurnover(dto.annualTurnover())
+                .fullName(dto.fullName())
+                .type(dto.type())
+                .officialAddress(dto.officialAddress())
+                .build();
+        return organizationRepository.saveRaw(organization);
+    }
+
     public Organization update(Long id, OrganizationRequest dto) {
         var organization = getById(id);
         organization.setName(dto.name());
@@ -72,9 +84,9 @@ public class OrganizationService {
         organizationRepository.delete(organization);
     }
 
-    public EmployeesResponse getEmployees(Long id) {
+    public EmployeesList getEmployees(Long id) {
         var organization = getById(id);
-        return new EmployeesResponse(employeeRepository.findByOrganization(organization));
+        return new EmployeesList(employeeRepository.findByOrganization(organization));
     }
 
     public TurnoverResponse getTotalTurnover() {
