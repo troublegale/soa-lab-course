@@ -47,5 +47,17 @@ services:
       - ./openapi.yaml:/mnt/openapi.yaml
     container_name: soa-swagger
 
+  frontend:
+    build: frontend
+    ports:
+      - "443:443"
+    volumes:
+      - ./frontend/nginx/certs/frontend.crt:/etc/nginx/certs/frontend.crt:ro
+      - ./frontend/nginx/certs/frontend.key:/etc/nginx/certs/frontend.key:ro
+      - ./frontend/nginx/certs/backend-trust.pem:/etc/nginx/certs/backend-trust.pem:ro
+    depends_on:
+      - spring-wildfly
+      - jaxrs-wildfly
+
 volumes:
   postgresql-data:
