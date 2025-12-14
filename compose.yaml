@@ -3,7 +3,7 @@ services:
   spring-wildfly:
     build: spring
     ports:
-      - '8443:8443'
+      - '8444:8443'
       - '9990:9990'
     environment:
       JAVA_OPTS_APPEND: >
@@ -16,7 +16,7 @@ services:
   jaxrs-wildfly:
     build: jax-rs
     ports:
-      - '8444:8443'
+      - '8445:8443'
       - '9991:9990'
     environment:
       JAVA_OPTS_APPEND: >
@@ -25,6 +25,14 @@ services:
     container_name: soa-jaxrs-wildfly
     depends_on:
       - spring-wildfly
+
+  frontend:
+    build: frontend
+    ports:
+      - '443:443'
+    depends_on:
+      - spring-wildfly
+      - jaxrs-wildfly
 
   postgres:
     image: 'postgres:latest'
@@ -46,18 +54,6 @@ services:
     volumes:
       - ./openapi.yaml:/mnt/openapi.yaml
     container_name: soa-swagger
-
-  frontend:
-    build: frontend
-    ports:
-      - "443:443"
-    volumes:
-      - ./frontend/nginx/certs/frontend.crt:/etc/nginx/certs/frontend.crt:ro
-      - ./frontend/nginx/certs/frontend.key:/etc/nginx/certs/frontend.key:ro
-      - ./frontend/nginx/certs/backend-trust.pem:/etc/nginx/certs/backend-trust.pem:ro
-    depends_on:
-      - spring-wildfly
-      - jaxrs-wildfly
 
 volumes:
   postgresql-data:
