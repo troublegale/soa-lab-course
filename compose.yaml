@@ -55,6 +55,8 @@ services:
     volumes:
       - ./openapi.yaml:/mnt/openapi.yaml
     container_name: soa-swagger
+    depends_on:
+      - frontend
 
 volumes:
   postgresql-data:
