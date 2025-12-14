@@ -129,7 +129,7 @@ export function OrganizationsTable({ refreshToken = 0 }: { refreshToken?: number
                     <div className="meta">
                         {data ? (
                             <>
-                                Всего: <b>{data.totalElements}</b>, страниц: <b>{data.totalPages}</b>
+                                Total: <b>{data.totalElements}</b>
                             </>
                         ) : (
                             "—"
