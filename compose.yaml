@@ -30,6 +30,7 @@ services:
     build: frontend
     ports:
       - '8448:443'
+    container_name: frontend
     depends_on:
       - spring-wildfly
       - jaxrs-wildfly
