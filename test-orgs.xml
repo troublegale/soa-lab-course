@@ -1,0 +1,462 @@
+<organizations>
+
+    <organization>
+        <name>Alpha Corp</name>
+        <coordinates>
+            <x>-500</x>
+            <y>-100.5</y>
+        </coordinates>
+        <annualTurnover>150000.0</annualTurnover>
+        <fullName>Alpha Corporation International</fullName>
+        <type>COMMERCIAL</type>
+        <officialAddress>
+            <street>Main Street 12</street>
+            <town>
+                <x>12.5</x>
+                <y>300</y>
+                <name>Springfield</name>
+            </town>
+        </officialAddress>
+    </organization>
+
+    <organization>
+        <name>GovTech</name>
+        <coordinates>
+            <x>-700</x>
+            <y>-50.0</y>
+        </coordinates>
+        <annualTurnover>5000000.0</annualTurnover>
+        <fullName>Government Technologies Bureau</fullName>
+        <type>GOVERNMENT</type>
+        <officialAddress>
+            <street>Liberty Avenue</street>
+            <town>
+                <x>120.0</x>
+                <y>900</y>
+                <name>Capital City</name>
+            </town>
+        </officialAddress>
+    </organization>
+
+    <organization>
+        <name>Sunrise LTD</name>
+        <coordinates>
+            <x>-300</x>
+            <y>-10.0</y>
+        </coordinates>
+        <annualTurnover>250000.0</annualTurnover>
+        <fullName>Sunrise Private Limited</fullName>
+        <type>PRIVATE_LIMITED_COMPANY</type>
+        <officialAddress>
+            <street>Sunset Boulevard 7</street>
+            <town>
+                <x>55.0</x>
+                <y>1200</y>
+                <name>Brighton</name>
+            </town>
+        </officialAddress>
+    </organization>
+
+    <organization>
+        <name>OpenStock Industries</name>
+        <coordinates>
+            <x>-825</x>
+            <y>-142.9</y>
+        </coordinates>
+        <annualTurnover>999999.0</annualTurnover>
+        <fullName>Open Stock Industrial Company</fullName>
+        <type>OPEN_JOINT_STOCK_COMPANY</type>
+        <officialAddress>
+            <street>Industrial Road</street>
+            <town>
+                <x>5.0</x>
+                <y>10</y>
+                <name>Industropolis</name>
+            </town>
+        </officialAddress>
+    </organization>
+
+<organization>
+  <name>NorthBridge Commerce</name>
+  <coordinates>
+    <x>-700</x>
+    <y>-120.5</y>
+  </coordinates>
+  <annualTurnover>2150000.0</annualTurnover>
+  <fullName>NorthBridge Commercial Holdings</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Harbor Street 18</street>
+    <town>
+      <x>42.0</x>
+      <y>350</y>
+      <name>Portsville</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Central City Bureau</name>
+  <coordinates>
+    <x>-810</x>
+    <y>-30.0</y>
+  </coordinates>
+  <annualTurnover>7800000.0</annualTurnover>
+  <fullName>Central City Government Bureau</fullName>
+  <type>GOVERNMENT</type>
+  <officialAddress>
+    <street>Administration Square 1</street>
+    <town>
+      <x>120.0</x>
+      <y>900</y>
+      <name>Centralia</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>BlueLeaf LTD</name>
+  <coordinates>
+    <x>-600</x>
+    <y>-80.25</y>
+  </coordinates>
+  <annualTurnover>430000.0</annualTurnover>
+  <fullName>BlueLeaf Private Limited Company</fullName>
+  <type>PRIVATE_LIMITED_COMPANY</type>
+  <officialAddress>
+    <street>Maple Avenue 7</street>
+    <town>
+      <x>55.5</x>
+      <y>1200</y>
+      <name>Greenville</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>OpenStock Industries</name>
+  <coordinates>
+    <x>-825</x>
+    <y>-142.9</y>
+  </coordinates>
+  <annualTurnover>999999.0</annualTurnover>
+  <fullName>Open Stock Industrial Company</fullName>
+  <type>OPEN_JOINT_STOCK_COMPANY</type>
+  <officialAddress>
+    <street>Industrial Road</street>
+    <town>
+      <x>5.0</x>
+      <y>10</y>
+      <name>Industropolis</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Sunset Retail Group</name>
+  <coordinates>
+    <x>-500</x>
+    <y>-15.0</y>
+  </coordinates>
+  <annualTurnover>1250000.0</annualTurnover>
+  <fullName>Sunset Retail Commercial Group</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Sunset Boulevard 77</street>
+    <town>
+      <x>88.0</x>
+      <y>640</y>
+      <name>Goldhaven</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Evergreen Services</name>
+  <coordinates>
+    <x>-450</x>
+    <y>-60.4</y>
+  </coordinates>
+  <annualTurnover>910000.0</annualTurnover>
+  <fullName>Evergreen Commercial Services</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Pine Street 3</street>
+    <town>
+      <x>12.0</x>
+      <y>220</y>
+      <name>Everton</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Atlas Infrastructure</name>
+  <coordinates>
+    <x>-780</x>
+    <y>-40.0</y>
+  </coordinates>
+  <annualTurnover>16400000.0</annualTurnover>
+  <fullName>Atlas Government Infrastructure Agency</fullName>
+  <type>GOVERNMENT</type>
+  <officialAddress>
+    <street>Unity Avenue 14</street>
+    <town>
+      <x>140.0</x>
+      <y>980</y>
+      <name>Capitoline</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>BrightStone Manufacturing</name>
+  <coordinates>
+    <x>-720</x>
+    <y>-110.0</y>
+  </coordinates>
+  <annualTurnover>5400000.0</annualTurnover>
+  <fullName>BrightStone Open Joint Stock Company</fullName>
+  <type>OPEN_JOINT_STOCK_COMPANY</type>
+  <officialAddress>
+    <street>Foundry Lane 9</street>
+    <town>
+      <x>18.0</x>
+      <y>75</y>
+      <name>Steelpoint</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>SilverCrest Ventures</name>
+  <coordinates>
+    <x>-350</x>
+    <y>-22.2</y>
+  </coordinates>
+  <annualTurnover>670000.0</annualTurnover>
+  <fullName>SilverCrest Private Limited Ventures</fullName>
+  <type>PRIVATE_LIMITED_COMPANY</type>
+  <officialAddress>
+    <street>Crescent Road 11</street>
+    <town>
+      <x>33.3</x>
+      <y>540</y>
+      <name>Moonridge</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Rivergate Trading</name>
+  <coordinates>
+    <x>-610</x>
+    <y>-95.7</y>
+  </coordinates>
+  <annualTurnover>1985000.0</annualTurnover>
+  <fullName>Rivergate Commercial Trading Company</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Riverside Walk 6</street>
+    <town>
+      <x>21.0</x>
+      <y>410</y>
+      <name>Riverton</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Metro Transit Authority</name>
+  <coordinates>
+    <x>-820</x>
+    <y>-12.0</y>
+  </coordinates>
+  <annualTurnover>11200000.0</annualTurnover>
+  <fullName>Metropolitan Government Transit Authority</fullName>
+  <type>GOVERNMENT</type>
+  <officialAddress>
+    <street>Station Plaza 2</street>
+    <town>
+      <x>160.0</x>
+      <y>1020</y>
+      <name>Metropolis</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Orchid Labs</name>
+  <coordinates>
+    <x>-410</x>
+    <y>-72.0</y>
+  </coordinates>
+  <annualTurnover>350000.0</annualTurnover>
+  <fullName>Orchid Labs Private Limited Company</fullName>
+  <type>PRIVATE_LIMITED_COMPANY</type>
+  <officialAddress>
+    <street>Garden Street 21</street>
+    <town>
+      <x>9.0</x>
+      <y>180</y>
+      <name>Bloomfield</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>GraniteWorks</name>
+  <coordinates>
+    <x>-740</x>
+    <y>-135.0</y>
+  </coordinates>
+  <annualTurnover>7200000.0</annualTurnover>
+  <fullName>GraniteWorks Open Joint Stock Company</fullName>
+  <type>OPEN_JOINT_STOCK_COMPANY</type>
+  <officialAddress>
+    <street>Quarry Road 5</street>
+    <town>
+      <x>4.0</x>
+      <y>45</y>
+      <name>Stonevale</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Skyline Media</name>
+  <coordinates>
+    <x>-560</x>
+    <y>-8.8</y>
+  </coordinates>
+  <annualTurnover>1420000.0</annualTurnover>
+  <fullName>Skyline Commercial Media Group</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Broadcast Avenue 10</street>
+    <town>
+      <x>77.0</x>
+      <y>610</y>
+      <name>Skytown</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Hearth %38 Home Goods</name>
+  <coordinates>
+    <x>-520</x>
+    <y>-55.0</y>
+  </coordinates>
+  <annualTurnover>860000.0</annualTurnover>
+  <fullName>Hearth and Home Commercial Goods</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Market Street 44</street>
+    <town>
+      <x>66.0</x>
+      <y>430</y>
+      <name>Fairview</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Eastfield Registry</name>
+  <coordinates>
+    <x>-805</x>
+    <y>-5.0</y>
+  </coordinates>
+  <annualTurnover>9500000.0</annualTurnover>
+  <fullName>Eastfield Government Registry Office</fullName>
+  <type>GOVERNMENT</type>
+  <officialAddress>
+    <street>Registry Lane 8</street>
+    <town>
+      <x>110.0</x>
+      <y>870</y>
+      <name>Eastfield</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Nova Capital JSC</name>
+  <coordinates>
+    <x>-830</x>
+    <y>-140.0</y>
+  </coordinates>
+  <annualTurnover>15999000.0</annualTurnover>
+  <fullName>Nova Capital Open Joint Stock Company</fullName>
+  <type>OPEN_JOINT_STOCK_COMPANY</type>
+  <officialAddress>
+    <street>Capital Road 16</street>
+    <town>
+      <x>3.0</x>
+      <y>25</y>
+      <name>Novagrad</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Meadowbrook Solutions</name>
+  <coordinates>
+    <x>-390</x>
+    <y>-100.0</y>
+  </coordinates>
+  <annualTurnover>520000.0</annualTurnover>
+  <fullName>Meadowbrook Private Limited Solutions</fullName>
+  <type>PRIVATE_LIMITED_COMPANY</type>
+  <officialAddress>
+    <street>Meadow Lane 2</street>
+    <town>
+      <x>19.0</x>
+      <y>260</y>
+      <name>Meadowbrook</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Polar Logistics</name>
+  <coordinates>
+    <x>-650</x>
+    <y>-140.2</y>
+  </coordinates>
+  <annualTurnover>3050000.0</annualTurnover>
+  <fullName>Polar Commercial Logistics Company</fullName>
+  <type>COMMERCIAL</type>
+  <officialAddress>
+    <street>Freight Street 9</street>
+    <town>
+      <x>24.0</x>
+      <y>310</y>
+      <name>Northport</name>
+    </town>
+  </officialAddress>
+</organization>
+
+<organization>
+  <name>Westvale Waterworks</name>
+  <coordinates>
+    <x>-799</x>
+    <y>-66.6</y>
+  </coordinates>
+  <annualTurnover>8800000.0</annualTurnover>
+  <fullName>Westvale Government Waterworks Department</fullName>
+  <type>GOVERNMENT</type>
+  <officialAddress>
+    <street>Aqueduct Way 13</street>
+    <town>
+      <x>130.0</x>
+      <y>940</y>
+      <name>Westvale</name>
+    </town>
+  </officialAddress>
+</organization>
+
+
+
+
+</organizations>

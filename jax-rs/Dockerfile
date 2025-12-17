@@ -1,3 +1,14 @@
+FROM gradle:8-jdk17 AS build
+WORKDIR /home/gradle/project
+
+COPY . .
+
+RUN gradle --no-daemon clean war
+
+RUN bash -lc 'WAR="$(ls -1 build/libs/*.war | head -n 1)"; cp "$WAR" /tmp/orgmanager.war'
+
+
+
 FROM quay.io/wildfly/wildfly
 
 USER root
@@ -5,7 +16,7 @@ USER root
 RUN /opt/jboss/wildfly/bin/add-user.sh -u wildfly -p wildfly! --silent
 
 COPY standalone.xml /opt/jboss/wildfly/standalone/configuration/
-COPY build/libs/*.war /opt/jboss/wildfly/standalone/deployments/orgmanager.war
+COPY --from=build /tmp/orgmanager.war /opt/jboss/wildfly/standalone/deployments/orgmanager.war
 COPY jaxrs.keystore /opt/jboss/wildfly/standalone/configuration/
 COPY truststore.jks /opt/jboss/wildfly/standalone/configuration/
 
