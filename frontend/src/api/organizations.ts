@@ -392,20 +392,20 @@ function buildOrganizationQueryXml(q: OrganizationQueryState): string {
 
     // addressFilter только если что-то из адреса задано
     if (q.addressStreet || q.addressTownName || q.addressTownX || q.addressTownY) {
-        parts.push("<addressFilter>");
+        parts.push("<officialAddressFilter>");
 
         if (q.addressStreet) parts.push(buildOpValueXml("streetFilter", q.addressStreet.op, q.addressStreet.value));
 
         // locationFilter только если что-то из town задано
         if (q.addressTownName || q.addressTownX || q.addressTownY) {
-            parts.push("<locationFilter>");
+            parts.push("<townFilter>");
             if (q.addressTownX) parts.push(buildOpValueXml("xFilter", q.addressTownX.op, String(q.addressTownX.value)));
             if (q.addressTownY) parts.push(buildOpValueXml("yFilter", q.addressTownY.op, String(q.addressTownY.value)));
             if (q.addressTownName) parts.push(buildOpValueXml("nameFilter", q.addressTownName.op, q.addressTownName.value));
-            parts.push("</locationFilter>");
+            parts.push("</townFilter>");
         }
 
-        parts.push("</addressFilter>");
+        parts.push("</officialAddressFilter>");
     }
 
     parts.push("</organizationQuery>");
