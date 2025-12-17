@@ -313,3 +313,98 @@ button:disabled {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.opsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.opsRow {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+  .opsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.opsLeft button {
+  width: 100%;
+}
+
+.opsRight .error {
+  margin-bottom: 10px;
+}
+
+.opsResult {
+  display: grid;
+  gap: 8px;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.opsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.opsLtHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opsForm {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap; /* чтобы на узких экранах кнопки переносились */
+}
+
+.opsForm input {
+  flex: 1;
+  min-width: 320px; /* чтобы плейсхолдер и ввод были видны */
+}
+
+.ltMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.opsInline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.opsInline input {
+  min-width: 180px;
+}
+
+.opsResultCompact {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.opsInline select {
+  min-width: 180px;
+}

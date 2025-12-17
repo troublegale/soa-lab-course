@@ -28,7 +28,7 @@ public class SpringClient {
     public FireResponse fireAllOrgEmployees(Long id) {
         var ids = getIds(id);
 
-        if (ids.isEmpty()) return new FireResponse(0);
+        if (ids == null || ids.isEmpty()) return new FireResponse(0);
 
         deleteEmployees(ids);
         return new FireResponse(ids.size());
@@ -51,13 +51,16 @@ public class SpringClient {
             var updatedAcquirer = updateTurnover(newTurnover, acquirer);
 
             var employees = getEmployees(acquiredId);
-            compensations.add(() -> transferEmployees(acquiredId, employees));
-            var updatedEmployees = transferEmployees(acquirerId, employees);
+            var number = 0;
+            if (employees.getEmployees() != null) {
+                compensations.add(() -> transferEmployees(acquiredId, employees));
+                number = transferEmployees(acquirerId, employees).getEmployees().size();
+            }
 
             compensations.add(() -> compensateOrganization(acquired));
             deleteOrganization(acquiredId);
 
-            return new Acquiring(updatedAcquirer, acquired, updatedEmployees.getEmployees().size());
+            return new Acquiring(updatedAcquirer, acquired, number);
         } catch (Exception e) {
             StringBuilder message = new StringBuilder("Acquiring failed:" + e.getMessage());
             if (!compensations.isEmpty()) {
@@ -97,6 +100,7 @@ public class SpringClient {
 
     private List<Long> getIds(Long orgId) {
         var employees = getEmployees(orgId);
+        if (employees.getEmployees() == null) return null;
         return employees.getEmployees().stream().map(Employee::getId).toList();
     }
 

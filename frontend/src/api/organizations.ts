@@ -200,6 +200,25 @@ export async function createOrganization(req: OrganizationCreateRequest): Promis
     }
 }
 
+export async function updateOrganization(id: number, req: OrganizationCreateRequest): Promise<void> {
+    const xml = buildCreateOrganizationXml(req); // тот же XML, что и для create
+
+    const res = await fetch(`/soa/api/v1/organizations/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/xml",
+            Accept: "application/xml",
+        },
+        body: xml,
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ""}`);
+    }
+}
+
+
 export type SortField =
     | "id"
     | "name"

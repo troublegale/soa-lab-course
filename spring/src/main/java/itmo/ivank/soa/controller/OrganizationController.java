@@ -62,15 +62,15 @@ public class OrganizationController {
     }
 
     @GetMapping(path = "/types", produces = MediaType.APPLICATION_XML_VALUE)
-    public List<TypeCount> getOrganizationTypesCount() {
+    public TypeCountResponse getOrganizationTypesCount() {
         return organizationService.getOrganizationTypesCount();
     }
 
     @PostMapping(path = "/lt-full-name", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    public OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull String fullNameValue,
+    public OrganizationsPage getOrganizationsLessThanFullName(@RequestBody @NotNull FullNameValue fullNameValue,
                                                               @RequestParam(defaultValue = "1") @Valid Integer page,
                                                               @RequestParam(defaultValue = "20") @Valid Integer size) {
-        return organizationService.getOrganizationsLessThanFullName(fullNameValue, page, size);
+        return organizationService.getOrganizationsLessThanFullName(fullNameValue.value(), page, size);
     }
 
     @PostMapping(path = "/compensate", consumes = MediaType.APPLICATION_XML_VALUE,

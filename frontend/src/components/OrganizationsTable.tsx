@@ -1,5 +1,6 @@
 import React from "react";
 import {fetchOrganizationsPage, fetchOrganizationsPageQuery, type OrganizationsPage, type Organization, type SortField} from "../api/organizations";
+import { CreateOrganizationModal } from "./CreateOrganizationModal";
 
 function formatDate(isoDate: string): string {
     if (!isoDate) return "";
@@ -73,11 +74,21 @@ function buildPageItems(current: number, total: number, siblingCount = 1): PageI
     return cleaned;
 }
 
-export function OrganizationsTable({ refreshToken = 0 }: { refreshToken?: number }) {
+export function OrganizationsTable({refreshToken = 0, onMutate,}: {
+    refreshToken?: number;
+    onMutate?: () => void;
+}) {
     const [page, setPage] = React.useState(1);
     const [size, setSize] = React.useState(5);
     type SortState = { field: SortField; desc: boolean } | null;
     const [sort, setSort] = React.useState<SortState>(null);
+    const [updateOpen, setUpdateOpen] = React.useState(false);
+    const [selectedOrg, setSelectedOrg] = React.useState<Organization | null>(null);
+
+    const openUpdate = (org: Organization) => {
+        setSelectedOrg(org);
+        setUpdateOpen(true);
+    };
 
     const toggleSort = (field: SortField) => {
         setPage(1);
@@ -194,7 +205,7 @@ export function OrganizationsTable({ refreshToken = 0 }: { refreshToken?: number
 
             {error && (
                 <div className="error">
-                    <b>Ошибка:</b> {error}
+                    <b>Error:</b> {error}
                 </div>
             )}
 
@@ -234,6 +245,7 @@ export function OrganizationsTable({ refreshToken = 0 }: { refreshToken?: number
                         <th className="thSortable" onClick={() => toggleSort("officialAddress")}>
                             Official address {sort?.field === "officialAddress" ? (sort.desc ? "▼" : "▲") : ""}
                         </th>
+                        <th style={{ width: 110 }}>Actions</th>
                     </tr>
                     </thead>
 
@@ -264,11 +276,21 @@ export function OrganizationsTable({ refreshToken = 0 }: { refreshToken?: number
                                         ? ` (${o.officialAddress.town.x}; ${o.officialAddress.town.y})`
                                         : ""}
                                 </td>
+                                <td>
+                                    <button onClick={() => openUpdate(o)}>Update</button>
+                                </td>
                             </tr>
                         ))
                     )}
                     </tbody>
                 </table>
+                <CreateOrganizationModal
+                    open={updateOpen}
+                    onClose={() => setUpdateOpen(false)}
+                    mode="update"
+                    initialOrganization={selectedOrg}
+                    onCreated={() => onMutate?.()}
+                />
             </div>
         </section>
     );

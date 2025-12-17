@@ -1,12 +1,15 @@
 import React from "react";
 import type {OrganizationType} from "../api/organizations";
-import {createOrganization} from "../api/organizations";
+import {createOrganization, updateOrganization} from "../api/organizations";
+import type { Organization } from "../api/organizations";
 
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    onCreated?: () => void; // чтобы потом можно было обновить таблицу
+    onCreated?: () => void; // можно переименовать позже в onSuccess
+    mode?: "create" | "update";
+    initialOrganization?: Organization | null;
 };
 
 const ORG_TYPES: OrganizationType[] = [
@@ -73,7 +76,7 @@ function parseIntOrNull(s: string): number | null {
     return Number.isInteger(n) ? n : null;
 }
 
-export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
+export function CreateOrganizationModal({open, onClose, onCreated, mode = "create", initialOrganization = null,}: Props) {
     const [form, setForm] = React.useState<FormState>(initialState);
     const [errors, setErrors] = React.useState<Errors>({});
     const [submitting, setSubmitting] = React.useState(false);
@@ -93,6 +96,37 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
     React.useEffect(() => {
         if (open) setErrors({});
     }, [open]);
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        setSubmitError(null);
+        setErrors({});
+
+        if ((mode) === "create") {
+            setForm(initialState);
+            return;
+        }
+
+        // update mode
+        const o = initialOrganization;
+        if (!o) return;
+
+        setForm({
+            name: o.name ?? "",
+            coordinatesX: o.coordinates?.x != null ? String(o.coordinates.x) : "",
+            coordinatesY: o.coordinates?.y != null ? String(o.coordinates.y) : "",
+            annualTurnover: o.annualTurnover != null ? String(o.annualTurnover) : "",
+            fullName: o.fullName ?? "",
+            type: o.type ?? "",
+
+            street: o.officialAddress?.street ?? "",
+            townX: o.officialAddress?.town?.x != null ? String(o.officialAddress.town.x) : "",
+            townY: o.officialAddress?.town?.y != null ? String(o.officialAddress.town.y) : "",
+            townName: o.officialAddress?.town?.name ?? "",
+        });
+    }, [open, mode, initialOrganization]);
+
 
     if (!open) return null;
 
@@ -169,6 +203,11 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
     };
 
     const onSubmit = (ev: React.FormEvent) => {
+        if ((mode) === "update" && !initialOrganization) {
+            setSubmitError("No organization selected for update");
+            return;
+        }
+
         ev.preventDefault();
         const v = validate();
         if (!v.ok) {
@@ -205,7 +244,19 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
         setSubmitting(true);
         setSubmitError(null);
 
-        createOrganization(payload)
+        const m = mode;
+
+        const req = payload; // OrganizationCreateRequest
+
+        setSubmitting(true);
+        setSubmitError(null);
+
+        const promise =
+            m === "create"
+                ? createOrganization(req)
+                : updateOrganization(initialOrganization!.id, req);
+
+        promise
             .then(() => {
                 setForm(initialState);
                 onClose();
@@ -215,6 +266,7 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
                 setSubmitError(e instanceof Error ? e.message : "Unknown error");
             })
             .finally(() => setSubmitting(false));
+
     };
 
     return (
@@ -227,7 +279,9 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
                 onMouseDown={(e) => e.stopPropagation()}
             >
                 <div className="modalHeader">
-                    <h3 className="modalTitle">Create organization</h3>
+                    <h3 className="modalTitle">
+                        {(mode) === "create" ? "Create organization" : `Update organization #${initialOrganization?.id ?? ""}`}
+                    </h3>
                     <button type="button" className="iconBtn" onClick={onClose} aria-label="Close">
                         ✕
                     </button>
@@ -324,7 +378,7 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
                     </div>
                     {submitError && (
                         <div className="error" style={{marginTop: 12}}>
-                            <b>Ошибка:</b> {submitError}
+                            <b>Error:</b> {submitError}
                         </div>
                     )}
                     <div className="modalFooter">
@@ -332,7 +386,13 @@ export function CreateOrganizationModal({open, onClose, onCreated}: Props) {
                             Cancel
                         </button>
                         <button type="submit" disabled={submitting}>
-                            {submitting ? "Creating…" : "Create"}
+                            {submitting
+                                ? (mode) === "create"
+                                    ? "Creating…"
+                                    : "Updating…"
+                                : (mode ?? "create") === "create"
+                                    ? "Create"
+                                    : "Update"}
                         </button>
                     </div>
                 </form>

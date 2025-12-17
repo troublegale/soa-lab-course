@@ -96,12 +96,12 @@ public class OrganizationService {
         return new TurnoverResponse(total, organizations.size());
     }
 
-    public List<TypeCount> getOrganizationTypesCount() {
+    public TypeCountResponse getOrganizationTypesCount() {
         List<OrganizationType> types = List.of(OrganizationType.values());
         List<TypeCount> typeCounts = new ArrayList<>();
         types.forEach(type -> typeCounts.add(
                 new TypeCount(type, organizationRepository.countByType(type))));
-        return typeCounts;
+        return new TypeCountResponse(typeCounts);
     }
 
     public OrganizationsPage getFiltered(Integer page, Integer size, OrganizationQuery query) {

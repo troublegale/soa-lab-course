@@ -1,6 +1,10 @@
 import React from "react";
 import { OrganizationsTable } from "../components/OrganizationsTable";
 import { CreateOrganizationModal } from "../components/CreateOrganizationModal";
+import EmployeesTab from "./EmployeesTab";
+import AdditionalOperationsTab from "./AdditionalOperationsTab";
+
+
 
 type TabKey = "all" | "query" | "employees" | "ops";
 
@@ -37,7 +41,10 @@ export default function Dashboard() {
                             <button onClick={() => setCreateOpen(true)}>Create</button>
                         </div>
 
-                        <OrganizationsTable refreshToken={refreshToken} />
+                        <OrganizationsTable
+                            refreshToken={refreshToken}
+                            onMutate={() => setRefreshToken((x) => x + 1)}
+                        />
 
                         <CreateOrganizationModal
                             open={createOpen}
@@ -48,8 +55,8 @@ export default function Dashboard() {
                 )}
 
                 {tab === "query" && <div className="placeholder">Organization Query (coming soon)</div>}
-                {tab === "employees" && <div className="placeholder">Employees (coming soon)</div>}
-                {tab === "ops" && <div className="placeholder">Additional Operations (coming soon)</div>}
+                {tab === "employees" && <EmployeesTab />}
+                {tab === "ops" && <AdditionalOperationsTab />}
             </div>
         </main>
     );
