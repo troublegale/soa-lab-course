@@ -9,6 +9,10 @@ import {
     type TypeCount,
 } from "../api/additionalOperations";
 import {fetchOrganizationsPage} from "../api/organizations";
+import {CreateOrganizationModal} from "../components/CreateOrganizationModal";
+import {DeleteOrganizationModal} from "../components/DeleteOrganizationModal";
+import {deleteOrganization} from "../api/organizations";
+
 
 function formatOrgType(type: string): string {
     if (!type) return "";
@@ -108,6 +112,46 @@ export default function AdditionalOperationsTab() {
     const [isFetching, setIsFetching] = React.useState(false);
     const [opError, setOpError] = React.useState<string | null>(null);
 
+    const [ltRefreshToken, setLtRefreshToken] = React.useState(0);
+
+// Update modal
+    const [updateOpen, setUpdateOpen] = React.useState(false);
+    const [selectedOrg, setSelectedOrg] = React.useState<Organization | null>(null);
+    const openUpdate = (org: Organization) => {
+        setSelectedOrg(org);
+        setUpdateOpen(true);
+    };
+
+// Delete modal
+    const [deleteOpen, setDeleteOpen] = React.useState(false);
+    const [deleteId, setDeleteId] = React.useState<number | null>(null);
+    const [deleting, setDeleting] = React.useState(false);
+    const [deleteError, setDeleteError] = React.useState<string | null>(null);
+
+    const openDelete = (id: number) => {
+        setDeleteId(id);
+        setDeleteError(null);
+        setDeleteOpen(true);
+    };
+
+    const refreshLt = () => setLtRefreshToken((x) => x + 1);
+
+    const confirmDelete = () => {
+        if (deleteId == null) return;
+        setDeleting(true);
+        setDeleteError(null);
+
+        deleteOrganization(deleteId)
+            .then(() => {
+                setDeleteOpen(false);
+                setDeleteId(null);
+                refreshLt();
+            })
+            .catch((e: unknown) => setDeleteError(e instanceof Error ? e.message : "Unknown error"))
+            .finally(() => setDeleting(false));
+    };
+
+
     const totalPages = data?.totalPages ?? 1;
 
     const prettyTurnover =
@@ -162,6 +206,11 @@ export default function AdditionalOperationsTab() {
             return;
         }
 
+        if (acquirerId === acquiredId) {
+            setAcqError("Acquirer ID and Acquired ID must be different");
+            return;
+        }
+
         setAcqLoading(true);
         setAcqError(null);
         setAcqMsg(null);
@@ -175,8 +224,6 @@ export default function AdditionalOperationsTab() {
             .catch((e: unknown) => setAcqError(e instanceof Error ? e.message : "Unknown error"))
             .finally(() => setAcqLoading(false));
     };
-
-
 
     const onSubmitLt = (e: React.FormEvent) => {
         e.preventDefault();
@@ -213,7 +260,7 @@ export default function AdditionalOperationsTab() {
             .finally(() => setIsFetching(false));
 
         return () => controller.abort();
-    }, [submittedValue, page, size]);
+    }, [submittedValue, page, size, ltRefreshToken]);
 
     return (
         <div className="opsWrap">
@@ -481,12 +528,13 @@ export default function AdditionalOperationsTab() {
                                     <th style={{width: 150}}>Type</th>
                                     <th>Coordinates</th>
                                     <th>Official address</th>
+                                    <th style={{width: 170}}>Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {(data?.organizations ?? []).length === 0 && !isFetching ? (
                                     <tr>
-                                        <td colSpan={8} className="muted">
+                                        <td colSpan={9} className="muted">
                                             No organizations
                                         </td>
                                     </tr>
@@ -509,6 +557,12 @@ export default function AdditionalOperationsTab() {
                                                     ? ` (${o.officialAddress.town.x}; ${o.officialAddress.town.y})`
                                                     : ""}
                                             </td>
+                                            <td>
+                                                <div style={{display: "flex", gap: 8}}>
+                                                    <button onClick={() => openUpdate(o)}>Update</button>
+                                                    <button onClick={() => openDelete(o.id)}>Delete</button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -518,6 +572,21 @@ export default function AdditionalOperationsTab() {
                     ) : (
                         <div className="muted">Enter a value and press Search to load organizations</div>
                     )}
+                    <CreateOrganizationModal
+                        open={updateOpen}
+                        onClose={() => setUpdateOpen(false)}
+                        mode="update"
+                        initialOrganization={selectedOrg}
+                        onCreated={refreshLt}
+                    />
+                    <DeleteOrganizationModal
+                        open={deleteOpen}
+                        organizationId={deleteId}
+                        loading={deleting}
+                        error={deleteError}
+                        onClose={() => (deleting ? null : setDeleteOpen(false))}
+                        onConfirm={confirmDelete}
+                    />
                 </div>
             </section>
         </div>

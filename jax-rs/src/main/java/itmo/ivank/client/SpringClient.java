@@ -17,6 +17,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @ApplicationScoped
@@ -44,9 +45,9 @@ public class SpringClient {
             var acquired = getOrganization(acquiredId);
 
             float oldTurnover = acquirer.getAnnualTurnover();
-            float newTurnover = oldTurnover > Float.MAX_VALUE - acquired.getAnnualTurnover() ?
-                    Float.MAX_VALUE :
-                    oldTurnover + acquired.getAnnualTurnover();
+            BigDecimal newTurnoverBD = BigDecimal.valueOf(oldTurnover)
+                    .add(BigDecimal.valueOf(acquired.getAnnualTurnover()));
+            float newTurnover = newTurnoverBD.floatValue();
             compensations.add(() -> updateTurnover(oldTurnover, acquirer));
             var updatedAcquirer = updateTurnover(newTurnover, acquirer);
 
@@ -62,6 +63,7 @@ public class SpringClient {
 
             return new Acquiring(updatedAcquirer, acquired, number);
         } catch (Exception e) {
+            e.printStackTrace();
             StringBuilder message = new StringBuilder("Acquiring failed:" + e.getMessage());
             if (!compensations.isEmpty()) {
                 message.append("\nPerforming ").append(compensations.size()).append(" compensation(s)");
@@ -140,6 +142,8 @@ public class SpringClient {
     }
 
     private Organization updateTurnover(Float turnover, Organization organization) {
+        var address = organization.getOfficialAddress() == null || organization.getOfficialAddress().getStreet() == null ?
+                null : organization.getOfficialAddress();
         try (var response = client.target(BASE_URL + "/organizations/" + organization.getId())
                 .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
@@ -149,7 +153,7 @@ public class SpringClient {
                         turnover,
                         organization.getFullName(),
                         organization.getType(),
-                        organization.getOfficialAddress()
+                        address
                 )))) {
             if (response.getStatus() >= 400) {
                 throw new ClientException("Failed to update turnover:\n" + response.readEntity(String.class));

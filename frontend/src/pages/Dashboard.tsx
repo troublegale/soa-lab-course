@@ -3,8 +3,7 @@ import { OrganizationsTable } from "../components/OrganizationsTable";
 import { CreateOrganizationModal } from "../components/CreateOrganizationModal";
 import EmployeesTab from "./EmployeesTab";
 import AdditionalOperationsTab from "./AdditionalOperationsTab";
-
-
+import OrganizationQueryTab from "./OrganizationQueryTab";
 
 type TabKey = "all" | "query" | "employees" | "ops";
 
@@ -54,7 +53,7 @@ export default function Dashboard() {
                     </>
                 )}
 
-                {tab === "query" && <div className="placeholder">Organization Query (coming soon)</div>}
+                {tab === "query" && <OrganizationQueryTab />}
                 {tab === "employees" && <EmployeesTab />}
                 {tab === "ops" && <AdditionalOperationsTab />}
             </div>

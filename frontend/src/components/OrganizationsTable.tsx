@@ -1,6 +1,8 @@
 import React from "react";
 import {fetchOrganizationsPage, fetchOrganizationsPageQuery, type OrganizationsPage, type Organization, type SortField} from "../api/organizations";
 import { CreateOrganizationModal } from "./CreateOrganizationModal";
+import { deleteOrganization } from "../api/organizations";
+import { DeleteOrganizationModal } from "./DeleteOrganizationModal";
 
 function formatDate(isoDate: string): string {
     if (!isoDate) return "";
@@ -88,6 +90,32 @@ export function OrganizationsTable({refreshToken = 0, onMutate,}: {
     const openUpdate = (org: Organization) => {
         setSelectedOrg(org);
         setUpdateOpen(true);
+    };
+
+    const [deleteOpen, setDeleteOpen] = React.useState(false);
+    const [deleteId, setDeleteId] = React.useState<number | null>(null);
+    const [deleting, setDeleting] = React.useState(false);
+    const [deleteError, setDeleteError] = React.useState<string | null>(null);
+
+    const openDelete = (id: number) => {
+        setDeleteId(id);
+        setDeleteError(null);
+        setDeleteOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (deleteId == null) return;
+        setDeleting(true);
+        setDeleteError(null);
+
+        deleteOrganization(deleteId)
+            .then(() => {
+                setDeleteOpen(false);
+                setDeleteId(null);
+                onMutate?.(); // обновить таблицу
+            })
+            .catch((e: unknown) => setDeleteError(e instanceof Error ? e.message : "Unknown error"))
+            .finally(() => setDeleting(false));
     };
 
     const toggleSort = (field: SortField) => {
@@ -245,7 +273,7 @@ export function OrganizationsTable({refreshToken = 0, onMutate,}: {
                         <th className="thSortable" onClick={() => toggleSort("officialAddress")}>
                             Official address {sort?.field === "officialAddress" ? (sort.desc ? "▼" : "▲") : ""}
                         </th>
-                        <th style={{ width: 110 }}>Actions</th>
+                        <th style={{ width: 170 }}>Actions</th>
                     </tr>
                     </thead>
 
@@ -254,7 +282,7 @@ export function OrganizationsTable({refreshToken = 0, onMutate,}: {
                     {organizations.length === 0 ? (
                         <tr>
                             <td colSpan={8} className="muted">
-                                {data ? "Нет данных" : "Загрузка…"}
+                                {data ? "No organizations" : "Loading…"}
                             </td>
                         </tr>
                     ) : (
@@ -277,8 +305,12 @@ export function OrganizationsTable({refreshToken = 0, onMutate,}: {
                                         : ""}
                                 </td>
                                 <td>
-                                    <button onClick={() => openUpdate(o)}>Update</button>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                        <button onClick={() => openUpdate(o)}>Update</button>
+                                        <button onClick={() => openDelete(o.id)}>Delete</button>
+                                    </div>
                                 </td>
+
                             </tr>
                         ))
                     )}
@@ -290,6 +322,14 @@ export function OrganizationsTable({refreshToken = 0, onMutate,}: {
                     mode="update"
                     initialOrganization={selectedOrg}
                     onCreated={() => onMutate?.()}
+                />
+                <DeleteOrganizationModal
+                    open={deleteOpen}
+                    organizationId={deleteId}
+                    loading={deleting}
+                    error={deleteError}
+                    onClose={() => (deleting ? null : setDeleteOpen(false))}
+                    onConfirm={confirmDelete}
                 />
             </div>
         </section>

@@ -308,4 +308,169 @@ export async function fetchOrganizationsPageQuery(params?: {
     };
 }
 
+export async function deleteOrganization(id: number): Promise<void> {
+    const res = await fetch(`/soa/api/v1/organizations/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/xml" },
+    });
 
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ""}`);
+    }
+}
+
+export type QueryNumOp = "eq" | "gt" | "ge" | "lt" | "le";
+export type QueryStrOp = "eq" | "contains" | "startsWith" | "endsWith";
+export type QueryDateOp = "eq" | "before" | "after";
+
+export type OrgQuerySortField =
+    | "id"
+    | "name"
+    | "fullName"
+    | "creationDate"
+    | "annualTurnover"
+    | "type"
+    | "coordinates"
+    | "officialAddress";
+
+export type OrganizationQueryState = {
+    sort?: { field: OrgQuerySortField; desc: boolean } | null;
+
+    id?: { op: QueryNumOp; value: number } | null;
+    name?: { op: QueryStrOp; value: string } | null;
+
+    coordX?: { op: QueryNumOp; value: number } | null;
+    coordY?: { op: QueryNumOp; value: number } | null;
+
+    creationDate?: { op: QueryDateOp; valueIso: string } | null; // YYYY-MM-DD
+
+    annualTurnover?: { op: QueryNumOp; value: number } | null;
+
+    fullName?: { op: QueryStrOp; value: string } | null;
+
+    type?: { value: OrganizationType } | null;
+
+    addressStreet?: { op: QueryStrOp; value: string } | null;
+    addressTownName?: { op: QueryStrOp; value: string } | null;
+    addressTownX?: { op: QueryNumOp; value: number } | null; // float ok
+    addressTownY?: { op: QueryNumOp; value: number } | null; // integer на бэке, но передаём как число
+};
+
+function buildOpValueXml(tag: string, op: string, value: string): string {
+    return `<${tag}><${op}>${xmlEscape(value)}</${op}></${tag}>`;
+}
+
+function buildOrganizationQueryXml(q: OrganizationQueryState): string {
+    const parts: string[] = [];
+    parts.push("<organizationQuery>");
+
+    if (q.sort) {
+        const s = `${q.sort.desc ? "-" : ""}${q.sort.field}`;
+        parts.push(`<sort><sort>${xmlEscape(s)}</sort></sort>`);
+    }
+
+    if (q.id) parts.push(buildOpValueXml("idFilter", q.id.op, String(q.id.value)));
+    if (q.name) parts.push(buildOpValueXml("nameFilter", q.name.op, q.name.value));
+
+    // coordinatesFilter только если есть x/y
+    if (q.coordX || q.coordY) {
+        parts.push("<coordinatesFilter>");
+        if (q.coordX) parts.push(buildOpValueXml("xFilter", q.coordX.op, String(q.coordX.value)));
+        if (q.coordY) parts.push(buildOpValueXml("yFilter", q.coordY.op, String(q.coordY.value)));
+        parts.push("</coordinatesFilter>");
+    }
+
+    if (q.creationDate) parts.push(buildOpValueXml("creationDateFilter", q.creationDate.op, q.creationDate.valueIso));
+
+    if (q.annualTurnover)
+        parts.push(buildOpValueXml("annualTurnoverFilter", q.annualTurnover.op, String(q.annualTurnover.value)));
+
+    if (q.fullName) parts.push(buildOpValueXml("fullNameFilter", q.fullName.op, q.fullName.value));
+
+    if (q.type) parts.push(`<typeFilter><eq>${xmlEscape(q.type.value)}</eq></typeFilter>`);
+
+    // addressFilter только если что-то из адреса задано
+    if (q.addressStreet || q.addressTownName || q.addressTownX || q.addressTownY) {
+        parts.push("<addressFilter>");
+
+        if (q.addressStreet) parts.push(buildOpValueXml("streetFilter", q.addressStreet.op, q.addressStreet.value));
+
+        // locationFilter только если что-то из town задано
+        if (q.addressTownName || q.addressTownX || q.addressTownY) {
+            parts.push("<locationFilter>");
+            if (q.addressTownX) parts.push(buildOpValueXml("xFilter", q.addressTownX.op, String(q.addressTownX.value)));
+            if (q.addressTownY) parts.push(buildOpValueXml("yFilter", q.addressTownY.op, String(q.addressTownY.value)));
+            if (q.addressTownName) parts.push(buildOpValueXml("nameFilter", q.addressTownName.op, q.addressTownName.value));
+            parts.push("</locationFilter>");
+        }
+
+        parts.push("</addressFilter>");
+    }
+
+    parts.push("</organizationQuery>");
+    return parts.join("");
+}
+
+export async function fetchOrganizationsByOrganizationQuery(params: {
+    page: number;
+    size: number;
+    query: OrganizationQueryState;
+    signal?: AbortSignal;
+}): Promise<OrganizationsPage> {
+    const url = new URL("/soa/api/v1/organizations/query", window.location.origin);
+    url.searchParams.set("page", String(params.page));
+    url.searchParams.set("size", String(params.size));
+
+    const body = buildOrganizationQueryXml(params.query);
+
+    const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/xml",
+            Accept: "application/xml",
+        },
+        body,
+        signal: params.signal,
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ""}`);
+    }
+
+    const xml = await res.text();
+    const parsed = parser.parse(xml);
+    const root = parsed?.organizationsPage;
+    if (!root) throw new Error("Unexpected XML: missing <organizationsPage>");
+
+    const orgRaw = root?.organizations?.organization;
+    const organizations: Organization[] = toArray(orgRaw).map((o: any) => ({
+        id: toNumber(o?.id),
+        name: toString(o?.name),
+        creationDate: toString(o?.creationDate),
+        annualTurnover: toNumber(o?.annualTurnover),
+        fullName: toString(o?.fullName),
+        coordinates: {
+            x: toNumber(o?.coordinates?.x),
+            y: toNumber(o?.coordinates?.y),
+        },
+        type: (toString(o?.type) || "COMMERCIAL") as OrganizationType,
+        officialAddress: {
+            street: toString(o?.officialAddress?.street),
+            town: {
+                x: toNumber(o?.officialAddress?.town?.x),
+                y: toNumber(o?.officialAddress?.town?.y),
+                name: toString(o?.officialAddress?.town?.name),
+            },
+        },
+    }));
+
+    return {
+        organizations,
+        page: toNumber(root?.page, params.page),
+        size: toNumber(root?.size, params.size),
+        totalElements: toNumber(root?.totalElements, 0),
+        totalPages: toNumber(root?.totalPages, 1),
+    };
+}

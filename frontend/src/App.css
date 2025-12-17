@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -408,3 +414,58 @@ button:disabled {
 .opsInline select {
   min-width: 180px;
 }
+
+.filtersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .filtersGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filterItem {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.filterLabel {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.filterItem select,
+.filterItem input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.filterItem select option {
+  background: #111;
+  color: #fff;
+}
+
