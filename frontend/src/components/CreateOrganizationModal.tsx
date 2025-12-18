@@ -382,9 +382,6 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
                         </div>
                     )}
                     <div className="modalFooter">
-                        <button type="button" onClick={onClose} disabled={submitting}>
-                            Cancel
-                        </button>
                         <button type="submit" disabled={submitting}>
                             {submitting
                                 ? (mode) === "create"
@@ -393,6 +390,9 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
                                 : (mode ?? "create") === "create"
                                     ? "Create"
                                     : "Update"}
+                        </button>
+                        <button type="button" onClick={onClose} disabled={submitting}>
+                            Cancel
                         </button>
                     </div>
                 </form>
