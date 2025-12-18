@@ -357,9 +357,6 @@ export default function OrganizationQueryTab() {
             <section className="card">
                 <div className="filtersHeader">
                     <div className="meta">Filters (operation + value). Empty filter is ignored.</div>
-                    <button onClick={onSearch} disabled={isFetching}>
-                        {isFetching ? "Searching…" : "Search"}
-                    </button>
                 </div>
 
                 <div className="filtersGrid">
@@ -582,6 +579,9 @@ export default function OrganizationQueryTab() {
                         {errors.addressTownY && <div className="fieldError">{errors.addressTownY}</div>}
                     </div>
                 </div>
+                <button onClick={onSearch} disabled={isFetching}>
+                    {isFetching ? "Searching…" : "Search"}
+                </button>
             </section>
 
             <section className="card">
