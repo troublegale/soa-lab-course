@@ -39,7 +39,7 @@ export function DeleteOrganizationModal({
                 style={{ width: "min(520px, 100%)" }}
             >
                 <div className="modalHeader">
-                    <h3 className="modalTitle">{`Delete Organization ${organizationId}?`}</h3>
+                    <h3 className="modalTitle">{`Delete Organization #${organizationId}?`}</h3>
                     <button type="button" className="iconBtn" onClick={onClose} aria-label="Close" disabled={loading}>
                         ✕
                     </button>

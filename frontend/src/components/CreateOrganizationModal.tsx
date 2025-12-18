@@ -280,7 +280,7 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             >
                 <div className="modalHeader">
                     <h3 className="modalTitle">
-                        {(mode) === "create" ? "Create organization" : `Update organization #${initialOrganization?.id ?? ""}`}
+                        {(mode) === "create" ? "Create Organization" : `Update Organization #${initialOrganization?.id ?? ""}`}
                     </h3>
                     <button type="button" className="iconBtn" onClick={onClose} aria-label="Close">
                         ✕
