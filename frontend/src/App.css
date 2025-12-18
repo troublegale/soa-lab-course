@@ -469,3 +469,16 @@ button:disabled {
   color: #fff;
 }
 
+.filtersActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.searchBtn {
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 220px;
+}

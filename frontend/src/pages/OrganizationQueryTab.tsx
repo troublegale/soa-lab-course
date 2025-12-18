@@ -579,9 +579,11 @@ export default function OrganizationQueryTab() {
                         {errors.addressTownY && <div className="fieldError">{errors.addressTownY}</div>}
                     </div>
                 </div>
-                <button onClick={onSearch} disabled={isFetching}>
-                    {isFetching ? "Searching…" : "Search"}
-                </button>
+                <div className="filtersActions">
+                    <button className="searchBtn" onClick={onSearch} disabled={isFetching}>
+                        {isFetching ? "Searching…" : "Search"}
+                    </button>
+                </div>
             </section>
 
             <section className="card">
