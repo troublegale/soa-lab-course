@@ -76,33 +76,81 @@ function parseIntOrNull(s: string): number | null {
     return Number.isInteger(n) ? n : null;
 }
 
-function parseFloatOrNullMaxScale(raw: string, maxScale = 8): { value: number | null; error?: string } {
+function canonicalizeDecimalString(raw: string): { canonical: string; scale: number } | null {
     const v0 = raw.trim();
-    if (v0 === "") return { value: null };
+    if (v0 === "") return null;
 
-    // если хочешь поддержать запятую как десятичный разделитель — оставь replace
+    // поддержим запятую
     const v = v0.replace(",", ".");
 
-    // не даём экспоненциальную запись, только обычное число
-    if (!/^[+-]?\d+(\.\d+)?$/.test(v)) {
-        return { value: null, error: "Invalid number" };
+    // только обычная запись (без экспоненты)
+    if (!/^[+-]?\d+(\.\d+)?$/.test(v)) return null;
+
+    const sign = v.startsWith("-") ? "-" : "";
+    const unsigned = v.replace(/^[+-]/, "");
+
+    const [intRaw, fracRaw = ""] = unsigned.split(".");
+    const scale = fracRaw.length;
+
+    // убираем ведущие нули у целой части (но оставляем один 0)
+    const intPart = intRaw.replace(/^0+(?=\d)/, "") || "0";
+
+    // дробную часть оставляем как ввёл пользователь (важно для сравнения)
+    const canonical = scale > 0 ? `${sign}${intPart}.${fracRaw}` : `${sign}${intPart}`;
+    return { canonical, scale };
+}
+
+function toF32(n: number): number {
+    return new Float32Array([n])[0];
+}
+
+/**
+ * Валидация под Java Float:
+ *  - пусто => null
+ *  - maxScale (по требованию) <= 8
+ *  - значение должно сохраниться после float32-округления на уровне введённой шкалы (scale)
+ */
+function parseJavaFloatOrNull(raw: string, maxScale = 7): { value: number | null; error?: string } {
+    const norm = canonicalizeDecimalString(raw);
+    if (!norm) return { value: null };
+
+    const { canonical, scale } = norm;
+
+    if (scale > maxScale) {
+        return { value: null, error: `Fractional part must be ≤ ${maxScale} digits` };
     }
 
-    const dotIdx = v.indexOf(".");
-    if (dotIdx !== -1) {
-        const frac = v.slice(dotIdx + 1);
-        if (frac.length > maxScale) {
-            return { value: null, error: `Fractional part must be ≤ ${maxScale} digits` };
-        }
-    }
-
-    const n = Number(v);
+    const n = Number(canonical);
     if (!Number.isFinite(n)) {
         return { value: null, error: "Invalid number" };
     }
 
-    return { value: n };
+    const f32 = toF32(n);
+    if (!Number.isFinite(f32)) {
+        return { value: null, error: "Out of Float range" };
+    }
+
+    // Сравнение на уровне шкалы пользователя:
+    // если пользователь ввёл 121121.00001 (scale=5), то после float32 оно станет 121121.00000
+    // => toFixed(5) сравниваем со строкой пользователя, приведённой к тому же виду.
+    const f32Fixed = f32.toFixed(scale);
+
+    // canonical уже без ведущих нулей и с той же scale (если scale>0)
+    // но toFixed(scale) всегда рисует дробную часть при scale>0, поэтому canonical тоже должен её иметь
+    const canonicalForCompare =
+        scale > 0
+            ? canonical // уже "int.frac" с нужной длиной frac
+            : canonical;
+
+    // Для scale>0 toFixed даёт "X.YYY" — canonical такой же формы
+    // Для scale=0 toFixed(0) даёт "X" — canonical тоже "X"
+    if (f32Fixed !== canonicalForCompare) {
+        return { value: null, error: "Value will lose precision in Java Float (it will be rounded/truncated)" };
+    }
+
+    return { value: f32 };
 }
+
 
 export function CreateOrganizationModal({open, onClose, onCreated, mode = "create", initialOrganization = null,}: Props) {
     const [form, setForm] = React.useState<FormState>(initialState);
@@ -181,7 +229,7 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             e.coordinatesX = "X must be ≥ -826";
         }
 
-        const cyRes = parseFloatOrNullMaxScale(form.coordinatesY, 8);
+        const cyRes = parseJavaFloatOrNull(form.coordinatesY, 7);
         if (cyRes.value === null) {
             e.coordinatesY = cyRes.error ?? "Y is required";
         } else if (cyRes.value < -143) {
@@ -190,7 +238,7 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
 
 
         // annualTurnover: @NotNull @Positive
-        const atRes = parseFloatOrNullMaxScale(form.annualTurnover, 8);
+        const atRes = parseJavaFloatOrNull(form.annualTurnover, 7);
         if (atRes.value === null) {
             e.annualTurnover = atRes.error ?? "Annual turnover is required";
         } else if (atRes.value <= 0) {
@@ -224,7 +272,7 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             else if (form.street.trim().length > 147) e.street = "Street must be ≤ 147 chars";
 
             // town.x: @NotNull Float
-            const txRes = parseFloatOrNullMaxScale(form.townX, 8);
+            const txRes = parseJavaFloatOrNull(form.townX, 7);
             if (txRes.value === null) e.townX = txRes.error ?? "Town X is required";
 
             // town.y: @NotNull Long (integer)
@@ -254,7 +302,7 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
         }
 
         const cx = parseIntOrNull(form.coordinatesX)!;
-        const cy = parseNumberOrNull(form.coordinatesY)!;
+        const cy = parseJavaFloatOrNull(form.coordinatesY).value!;
         const at = parseNumberOrNull(form.annualTurnover)!;
 
         // Собираем объект для бэка (id и creationDate НЕ отправляем)
