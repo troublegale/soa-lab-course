@@ -93,6 +93,16 @@ function isBlank(s: string) {
     return s.trim().length === 0;
 }
 
+function xmlEscape(s: string): string {
+    return s
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&apos;")
+        .replaceAll("%", "&#37;");
+}
+
 function parseNumberOrNull(s: string): number | null {
     if (s.trim() === "") return null;
     const n = Number(s);
@@ -334,14 +344,14 @@ export default function OrganizationQueryTab() {
 
             const v = row.value.trim();
 
-            // ✅ НОВОЕ: max length 255
             if (v.length > 255) {
                 e[key] = "Max length is 255";
                 return null;
             }
 
-            return {op: row.op as QueryStrOp, value: v};
+            return { op: row.op as QueryStrOp, value: xmlEscape(v) };
         };
+
 
         // ID
         const id = handleNum("id", idF, false);
