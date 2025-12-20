@@ -60,24 +60,47 @@ public class SpecificationBuilder {
         return spec;
     }
 
+    private static final char LIKE_ESCAPE = '\\';
+
+    private static String escapeLike(String input) {
+        if (input == null) return null;
+        // Важно: сначала экранируем сам escape-символ, потом % и _
+        return input
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+    }
+
     private static Specification<Organization> addStringFilter(Specification<Organization> spec, String fieldPath, StringFilter filter) {
         if (filter == null) return spec;
+
         if (filter.eq() != null && !filter.eq().isBlank()) {
+            final String v = filter.eq().trim();
             spec = spec.and((root, query, cb) ->
-                    cb.equal(resolvePath(root, fieldPath), filter.eq()));
+                    cb.equal(resolvePath(root, fieldPath), v));
         }
+
         if (filter.contains() != null && !filter.contains().isBlank()) {
+            final String v = escapeLike(filter.contains().trim());
+            final String pattern = "%" + v + "%";
             spec = spec.and((root, query, cb) ->
-                    cb.like(resolvePath(root, fieldPath), "%" + filter.contains() + "%"));
+                    cb.like(resolvePath(root, fieldPath), pattern, LIKE_ESCAPE));
         }
+
         if (filter.startsWith() != null && !filter.startsWith().isBlank()) {
+            final String v = escapeLike(filter.startsWith().trim());
+            final String pattern = v + "%";
             spec = spec.and((root, query, cb) ->
-                    cb.like(resolvePath(root, fieldPath), filter.startsWith() + "%"));
+                    cb.like(resolvePath(root, fieldPath), pattern, LIKE_ESCAPE));
         }
+
         if (filter.endsWith() != null && !filter.endsWith().isBlank()) {
+            final String v = escapeLike(filter.endsWith().trim());
+            final String pattern = "%" + v;
             spec = spec.and((root, query, cb) ->
-                    cb.like(resolvePath(root, fieldPath), "%" + filter.endsWith()));
+                    cb.like(resolvePath(root, fieldPath), pattern, LIKE_ESCAPE));
         }
+
         return spec;
     }
 
