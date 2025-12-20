@@ -93,17 +93,39 @@ function isBlank(s: string) {
     return s.trim().length === 0;
 }
 
-function parseNumberOrNull(s: string): number | null {
-    if (s.trim() === "") return null;
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
+const JAVA_LONG_MIN = -(2n ** 63n);
+const JAVA_LONG_MAX = 2n ** 63n - 1n;
+
+function parseLongOrNull(raw: string): { value: number | null; error?: string } {
+    const s = raw.trim();
+    if (s === "") return { value: null };
+
+    if (!/^[+-]?\d+$/.test(s)) {
+        return { value: null, error: "Must be an integer" };
+    }
+
+    let bi: bigint;
+    try {
+        bi = BigInt(s);
+    } catch {
+        return { value: null, error: "Invalid integer" };
+    }
+
+    if (bi < JAVA_LONG_MIN || bi > JAVA_LONG_MAX) {
+        return { value: null, error: "Out of range for Java long" };
+    }
+
+    // Чтобы не было потери точности в JS number
+    const minSafe = BigInt(Number.MIN_SAFE_INTEGER);
+    const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
+
+    if (bi < minSafe || bi > maxSafe) {
+        return { value: null, error: "Too large: exceeds JS safe integer (precision loss)" };
+    }
+
+    return { value: Number(bi) };
 }
 
-function parseIntOrNull(s: string): number | null {
-    const n = parseNumberOrNull(s);
-    if (n === null) return null;
-    return Number.isInteger(n) ? n : null;
-}
 
 const ORG_TYPES: OrganizationType[] = [
     "COMMERCIAL",
@@ -309,12 +331,12 @@ export default function OrganizationQueryTab() {
                 }
                 return { op: row.op as QueryNumOp, value: r.value };
             } else {
-                const n = parseIntOrNull(row.value);
-                if (n === null) {
-                    e[key] = "Invalid integer";
+                const r = parseLongOrNull(row.value);
+                if (r.value === null) {
+                    e[key] = r.error ?? "Invalid integer";
                     return null;
                 }
-                return { op: row.op as QueryNumOp, value: n };
+                return { op: row.op as QueryNumOp, value: r.value };
             }
         };
 

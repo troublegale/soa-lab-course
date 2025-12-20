@@ -76,6 +76,40 @@ function parseIntOrNull(s: string): number | null {
     return Number.isInteger(n) ? n : null;
 }
 
+const JAVA_LONG_MIN = -(2n ** 63n);
+const JAVA_LONG_MAX = 2n ** 63n - 1n;
+
+function parseLongOrNull(raw: string): { value: number | null; error?: string } {
+    const s = raw.trim();
+    if (s === "") return { value: null };
+
+    if (!/^[+-]?\d+$/.test(s)) {
+        return { value: null, error: "Must be an integer" };
+    }
+
+    let bi: bigint;
+    try {
+        bi = BigInt(s);
+    } catch {
+        return { value: null, error: "Invalid integer" };
+    }
+
+    if (bi < JAVA_LONG_MIN || bi > JAVA_LONG_MAX) {
+        return { value: null, error: "Out of range for Java long" };
+    }
+
+    // Чтобы не было потери точности в JS number
+    const minSafe = BigInt(Number.MIN_SAFE_INTEGER);
+    const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
+
+    if (bi < minSafe || bi > maxSafe) {
+        return { value: null, error: "Too large: exceeds JS safe integer (precision loss)" };
+    }
+
+    return { value: Number(bi) };
+}
+
+
 function canonicalizeDecimalString(raw: string): { canonical: string; scale: number } | null {
     const v0 = raw.trim();
     if (v0 === "") return null;
@@ -222,12 +256,13 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
         }
 
         // coordinates: required
-        const cx = parseIntOrNull(form.coordinatesX);
-        if (cx === null) {
-            e.coordinatesX = form.coordinatesX.trim() === "" ? "X is required" : "X must be an integer";
-        } else if (cx < -826) {
+        const cxRes = parseLongOrNull(form.coordinatesX);
+        if (cxRes.value === null) {
+            e.coordinatesX = form.coordinatesX.trim() === "" ? "X is required" : (cxRes.error ?? "X must be an integer");
+        } else if (cxRes.value < -826) {
             e.coordinatesX = "X must be ≥ -826";
         }
+
 
         const cyRes = parseJavaFloatOrNull(form.coordinatesY, 7);
         if (cyRes.value === null) {
@@ -276,9 +311,9 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             if (txRes.value === null) e.townX = txRes.error ?? "Town X is required";
 
             // town.y: @NotNull Long (integer)
-            const ty = parseIntOrNull(form.townY);
-            if (ty === null) {
-                e.townY = form.townY.trim() === "" ? "Town Y is required" : "Town Y must be an integer";
+            const tyRes = parseLongOrNull(form.townY);
+            if (tyRes.value === null) {
+                e.townY = form.townY.trim() === "" ? "Town Y is required" : (tyRes.error ?? "Town Y must be an integer");
             }
 
             // town.name: @NotNull String
