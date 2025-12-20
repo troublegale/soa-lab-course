@@ -141,7 +141,8 @@ function xmlEscape(s: string): string {
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
-        .replaceAll("'", "&apos;");
+        .replaceAll("'", "&apos;")
+        .replaceAll("%", "&#37;");
 }
 
 // Если вдруг бэк ждёт другой root-тег — поменяй тут на "OrganizationRequest" или "organization"

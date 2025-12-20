@@ -1,5 +1,5 @@
 import React from "react";
-import type { Organization, OrganizationType } from "../api/organizations";
+import type {Organization, OrganizationType} from "../api/organizations";
 import {
     fetchOrganizationsByOrganizationQuery,
     type OrganizationQueryState,
@@ -8,9 +8,9 @@ import {
     type QueryStrOp,
     type QueryDateOp,
 } from "../api/organizations";
-import { CreateOrganizationModal } from "../components/CreateOrganizationModal";
-import { DeleteOrganizationModal } from "../components/DeleteOrganizationModal";
-import { deleteOrganization } from "../api/organizations";
+import {CreateOrganizationModal} from "../components/CreateOrganizationModal";
+import {DeleteOrganizationModal} from "../components/DeleteOrganizationModal";
+import {deleteOrganization} from "../api/organizations";
 
 type PageItem = number | "…";
 
@@ -51,18 +51,43 @@ function formatDateDDMMYYYY(isoDate: string): string {
     return `${String(d).padStart(2, "0")}.${String(m).padStart(2, "0")}.${y}`;
 }
 
+function daysInMonth(year: number, month: number): number {
+    // month: 1..12
+    const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    switch (month) {
+        case 2:
+            return isLeap ? 29 : 28;
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            return 30;
+        default:
+            return 31;
+    }
+}
+
 function parseDDMMYYYYToISO(s: string): string | null {
     const v = s.trim();
     if (!v) return null;
+
     const m = v.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
     if (!m) return null;
+
     const dd = Number(m[1]);
     const mm = Number(m[2]);
     const yyyy = Number(m[3]);
-    if (!yyyy || mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
-    const iso = `${String(yyyy).padStart(4, "0")}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-    return iso;
+
+    if (!Number.isInteger(dd) || !Number.isInteger(mm) || !Number.isInteger(yyyy)) return null;
+    if (yyyy < 1) return null;
+    if (mm < 1 || mm > 12) return null;
+
+    const dim = daysInMonth(yyyy, mm);
+    if (dd < 1 || dd > dim) return null;
+
+    return `${String(yyyy).padStart(4, "0")}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 }
+
 
 function isBlank(s: string) {
     return s.trim().length === 0;
@@ -88,24 +113,24 @@ const ORG_TYPES: OrganizationType[] = [
 ];
 
 const NUM_OPS: { value: QueryNumOp; label: string }[] = [
-    { value: "eq", label: "eq" },
-    { value: "gt", label: "gt" },
-    { value: "ge", label: "ge" },
-    { value: "lt", label: "lt" },
-    { value: "le", label: "le" },
+    {value: "eq", label: "eq"},
+    {value: "gt", label: "gt"},
+    {value: "ge", label: "ge"},
+    {value: "lt", label: "lt"},
+    {value: "le", label: "le"},
 ];
 
 const STR_OPS: { value: QueryStrOp; label: string }[] = [
-    { value: "eq", label: "eq" },
-    { value: "contains", label: "contains" },
-    { value: "startsWith", label: "starts with" },
-    { value: "endsWith", label: "ends with" },
+    {value: "eq", label: "eq"},
+    {value: "contains", label: "contains"},
+    {value: "startsWith", label: "starts with"},
+    {value: "endsWith", label: "ends with"},
 ];
 
 const DATE_OPS: { value: QueryDateOp; label: string }[] = [
-    { value: "eq", label: "eq" },
-    { value: "before", label: "before" },
-    { value: "after", label: "after" },
+    {value: "eq", label: "eq"},
+    {value: "before", label: "before"},
+    {value: "after", label: "after"},
 ];
 
 type SortState = { field: OrgQuerySortField; desc: boolean } | null;
@@ -119,22 +144,22 @@ type Errors = Record<string, string | undefined>;
 
 export default function OrganizationQueryTab() {
     // filters
-    const [idF, setIdF] = React.useState<FilterRow>({ op: "", value: "" });
-    const [nameF, setNameF] = React.useState<FilterRow>({ op: "", value: "" });
+    const [idF, setIdF] = React.useState<FilterRow>({op: "", value: ""});
+    const [nameF, setNameF] = React.useState<FilterRow>({op: "", value: ""});
 
-    const [cxF, setCxF] = React.useState<FilterRow>({ op: "", value: "" });
-    const [cyF, setCyF] = React.useState<FilterRow>({ op: "", value: "" });
+    const [cxF, setCxF] = React.useState<FilterRow>({op: "", value: ""});
+    const [cyF, setCyF] = React.useState<FilterRow>({op: "", value: ""});
 
-    const [cdF, setCdF] = React.useState<FilterRow>({ op: "", value: "" }); // DD.MM.YYYY
-    const [turnF, setTurnF] = React.useState<FilterRow>({ op: "", value: "" });
+    const [cdF, setCdF] = React.useState<FilterRow>({op: "", value: ""}); // DD.MM.YYYY
+    const [turnF, setTurnF] = React.useState<FilterRow>({op: "", value: ""});
 
-    const [fullNameF, setFullNameF] = React.useState<FilterRow>({ op: "", value: "" });
+    const [fullNameF, setFullNameF] = React.useState<FilterRow>({op: "", value: ""});
     const [typeVal, setTypeVal] = React.useState<string>("");
 
-    const [streetF, setStreetF] = React.useState<FilterRow>({ op: "", value: "" });
-    const [townNameF, setTownNameF] = React.useState<FilterRow>({ op: "", value: "" });
-    const [townXF, setTownXF] = React.useState<FilterRow>({ op: "", value: "" });
-    const [townYF, setTownYF] = React.useState<FilterRow>({ op: "", value: "" });
+    const [streetF, setStreetF] = React.useState<FilterRow>({op: "", value: ""});
+    const [townNameF, setTownNameF] = React.useState<FilterRow>({op: "", value: ""});
+    const [townXF, setTownXF] = React.useState<FilterRow>({op: "", value: ""});
+    const [townYF, setTownYF] = React.useState<FilterRow>({op: "", value: ""});
 
     const [errors, setErrors] = React.useState<Errors>({});
 
@@ -169,17 +194,46 @@ export default function OrganizationQueryTab() {
     const bumpRefresh = () => {
         refreshTokenRef.current += 1;
         // триггерим перезапрос “на месте”
-        setSubmittedQuery((q) => (q ? { ...q } : q));
+        setSubmittedQuery((q) => (q ? {...q} : q));
     };
 
     const toggleSort = (field: OrgQuerySortField) => {
         setPage(1);
         setSort((prev) => {
-            if (!prev || prev.field !== field) return { field, desc: false };
-            if (prev.desc === false) return { field, desc: true };
+            if (!prev || prev.field !== field) return {field, desc: false};
+            if (prev.desc === false) return {field, desc: true};
             return null;
         });
     };
+
+    function parseFloatOrNullMaxScale(raw: string, maxScale = 8): { value: number | null; error?: string } {
+        const v0 = raw.trim();
+        if (v0 === "") return { value: null };
+
+        // если хочешь поддержать запятую как десятичный разделитель — оставь replace
+        const v = v0.replace(",", ".");
+
+        // не даём экспоненциальную запись, только обычное число
+        if (!/^[+-]?\d+(\.\d+)?$/.test(v)) {
+            return { value: null, error: "Invalid number" };
+        }
+
+        const dotIdx = v.indexOf(".");
+        if (dotIdx !== -1) {
+            const frac = v.slice(dotIdx + 1);
+            if (frac.length > maxScale) {
+                return { value: null, error: `Fractional part must be ≤ ${maxScale} digits` };
+            }
+        }
+
+        const n = Number(v);
+        if (!Number.isFinite(n)) {
+            return { value: null, error: "Invalid number" };
+        }
+
+        return { value: n };
+    }
+
 
     const validateAndBuildQuery = (): { ok: boolean; query?: OrganizationQueryState; errs?: Errors } => {
         const e: Errors = {};
@@ -199,12 +253,21 @@ export default function OrganizationQueryTab() {
                 return null;
             }
 
-            const n = allowFloat ? parseNumberOrNull(row.value) : parseIntOrNull(row.value);
-            if (n === null) {
-                e[key] = allowFloat ? "Invalid number" : "Invalid integer";
-                return null;
+            if (allowFloat) {
+                const r = parseFloatOrNullMaxScale(row.value, 8);
+                if (r.value === null) {
+                    e[key] = r.error ?? "Invalid number";
+                    return null;
+                }
+                return { op: row.op as QueryNumOp, value: r.value };
+            } else {
+                const n = parseIntOrNull(row.value);
+                if (n === null) {
+                    e[key] = "Invalid integer";
+                    return null;
+                }
+                return { op: row.op as QueryNumOp, value: n };
             }
-            return { op: row.op as QueryNumOp, value: n };
         };
 
         const handleStr = (key: string, row: FilterRow) => {
@@ -220,7 +283,16 @@ export default function OrganizationQueryTab() {
                 e[key] = "Enter value";
                 return null;
             }
-            return { op: row.op as QueryStrOp, value: row.value.trim() };
+
+            const v = row.value.trim();
+
+            // ✅ НОВОЕ: max length 255
+            if (v.length > 255) {
+                e[key] = "Max length is 255";
+                return null;
+            }
+
+            return {op: row.op as QueryStrOp, value: v};
         };
 
         // ID
@@ -233,7 +305,7 @@ export default function OrganizationQueryTab() {
 
         // Coordinates
         const cx = handleNum("coordX", cxF, false);
-        const cy = handleNum("coordY", cyF, false);
+        const cy = handleNum("coordY", cyF, true);
         if (cx) q.coordX = cx;
         if (cy) q.coordY = cy;
 
@@ -247,7 +319,7 @@ export default function OrganizationQueryTab() {
                 else {
                     const iso = parseDDMMYYYYToISO(cdF.value);
                     if (!iso) e.creationDate = "Invalid date (DD.MM.YYYY)";
-                    else q.creationDate = { op: cdF.op as QueryDateOp, valueIso: iso };
+                    else q.creationDate = {op: cdF.op as QueryDateOp, valueIso: iso};
                 }
             }
         }
@@ -261,7 +333,7 @@ export default function OrganizationQueryTab() {
         if (fn) q.fullName = fn;
 
         // Type
-        if (!isBlank(typeVal)) q.type = { value: typeVal as OrganizationType };
+        if (!isBlank(typeVal)) q.type = {value: typeVal as OrganizationType};
 
         // Address
         const street = handleStr("addressStreet", streetF);
@@ -277,10 +349,10 @@ export default function OrganizationQueryTab() {
         if (townY) q.addressTownY = townY;
 
         // sort
-        q.sort = sort ? { field: sort.field, desc: sort.desc } : null;
+        q.sort = sort ? {field: sort.field, desc: sort.desc} : null;
 
         const ok = Object.keys(e).length === 0;
-        return ok ? { ok: true, query: q } : { ok: false, errs: e };
+        return ok ? {ok: true, query: q} : {ok: false, errs: e};
     };
 
     const onSearch = () => {
@@ -309,10 +381,10 @@ export default function OrganizationQueryTab() {
 
         const q: OrganizationQueryState = {
             ...submittedQuery,
-            sort: sort ? { field: sort.field, desc: sort.desc } : null,
+            sort: sort ? {field: sort.field, desc: sort.desc} : null,
         };
 
-        fetchOrganizationsByOrganizationQuery({ page, size, query: q, signal: controller.signal })
+        fetchOrganizationsByOrganizationQuery({page, size, query: q, signal: controller.signal})
             .then((d) => setData(d))
             .catch((e: unknown) => {
                 if ((e as any)?.name === "AbortError") return;
@@ -363,7 +435,7 @@ export default function OrganizationQueryTab() {
                     {/* ID */}
                     <div className="filterItem">
                         <div className="filterLabel">ID</div>
-                        <select value={idF.op} onChange={(e) => setIdF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={idF.op} onChange={(e) => setIdF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -375,7 +447,7 @@ export default function OrganizationQueryTab() {
                             inputMode="numeric"
                             placeholder="integer"
                             value={idF.value}
-                            onChange={(e) => setIdF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setIdF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.id && <div className="fieldError">{errors.id}</div>}
                     </div>
@@ -383,7 +455,7 @@ export default function OrganizationQueryTab() {
                     {/* Name */}
                     <div className="filterItem">
                         <div className="filterLabel">Name</div>
-                        <select value={nameF.op} onChange={(e) => setNameF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={nameF.op} onChange={(e) => setNameF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {STR_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -391,14 +463,14 @@ export default function OrganizationQueryTab() {
                                 </option>
                             ))}
                         </select>
-                        <input value={nameF.value} onChange={(e) => setNameF((p) => ({ ...p, value: e.target.value }))} />
+                        <input value={nameF.value} onChange={(e) => setNameF((p) => ({...p, value: e.target.value}))}/>
                         {errors.name && <div className="fieldError">{errors.name}</div>}
                     </div>
 
                     {/* Coordinate X */}
                     <div className="filterItem">
                         <div className="filterLabel">Coordinate X</div>
-                        <select value={cxF.op} onChange={(e) => setCxF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={cxF.op} onChange={(e) => setCxF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -410,7 +482,7 @@ export default function OrganizationQueryTab() {
                             inputMode="numeric"
                             placeholder="integer"
                             value={cxF.value}
-                            onChange={(e) => setCxF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setCxF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.coordX && <div className="fieldError">{errors.coordX}</div>}
                     </div>
@@ -418,7 +490,7 @@ export default function OrganizationQueryTab() {
                     {/* Coordinate Y */}
                     <div className="filterItem">
                         <div className="filterLabel">Coordinate Y</div>
-                        <select value={cyF.op} onChange={(e) => setCyF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={cyF.op} onChange={(e) => setCyF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -427,10 +499,10 @@ export default function OrganizationQueryTab() {
                             ))}
                         </select>
                         <input
-                            inputMode="numeric"
-                            placeholder="integer"
+                            inputMode="decimal"
+                            placeholder="float"
                             value={cyF.value}
-                            onChange={(e) => setCyF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setCyF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.coordY && <div className="fieldError">{errors.coordY}</div>}
                     </div>
@@ -438,7 +510,7 @@ export default function OrganizationQueryTab() {
                     {/* Creation date */}
                     <div className="filterItem">
                         <div className="filterLabel">Creation date</div>
-                        <select value={cdF.op} onChange={(e) => setCdF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={cdF.op} onChange={(e) => setCdF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {DATE_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -449,7 +521,7 @@ export default function OrganizationQueryTab() {
                         <input
                             placeholder="DD.MM.YYYY"
                             value={cdF.value}
-                            onChange={(e) => setCdF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setCdF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.creationDate && <div className="fieldError">{errors.creationDate}</div>}
                     </div>
@@ -457,7 +529,7 @@ export default function OrganizationQueryTab() {
                     {/* Annual Turnover */}
                     <div className="filterItem">
                         <div className="filterLabel">Annual turnover</div>
-                        <select value={turnF.op} onChange={(e) => setTurnF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={turnF.op} onChange={(e) => setTurnF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -469,7 +541,7 @@ export default function OrganizationQueryTab() {
                             inputMode="decimal"
                             placeholder="float"
                             value={turnF.value}
-                            onChange={(e) => setTurnF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setTurnF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.annualTurnover && <div className="fieldError">{errors.annualTurnover}</div>}
                     </div>
@@ -477,7 +549,8 @@ export default function OrganizationQueryTab() {
                     {/* Full Name */}
                     <div className="filterItem">
                         <div className="filterLabel">Full name</div>
-                        <select value={fullNameF.op} onChange={(e) => setFullNameF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={fullNameF.op}
+                                onChange={(e) => setFullNameF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {STR_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -487,7 +560,7 @@ export default function OrganizationQueryTab() {
                         </select>
                         <input
                             value={fullNameF.value}
-                            onChange={(e) => setFullNameF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setFullNameF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.fullName && <div className="fieldError">{errors.fullName}</div>}
                     </div>
@@ -503,13 +576,13 @@ export default function OrganizationQueryTab() {
                                 </option>
                             ))}
                         </select>
-                        <div />
+                        <div/>
                     </div>
 
                     {/* Address Street */}
                     <div className="filterItem">
                         <div className="filterLabel">Address street</div>
-                        <select value={streetF.op} onChange={(e) => setStreetF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={streetF.op} onChange={(e) => setStreetF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {STR_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -517,14 +590,16 @@ export default function OrganizationQueryTab() {
                                 </option>
                             ))}
                         </select>
-                        <input value={streetF.value} onChange={(e) => setStreetF((p) => ({ ...p, value: e.target.value }))} />
+                        <input value={streetF.value}
+                               onChange={(e) => setStreetF((p) => ({...p, value: e.target.value}))}/>
                         {errors.addressStreet && <div className="fieldError">{errors.addressStreet}</div>}
                     </div>
 
                     {/* Town Name */}
                     <div className="filterItem">
                         <div className="filterLabel">Address town name</div>
-                        <select value={townNameF.op} onChange={(e) => setTownNameF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={townNameF.op}
+                                onChange={(e) => setTownNameF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {STR_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -534,7 +609,7 @@ export default function OrganizationQueryTab() {
                         </select>
                         <input
                             value={townNameF.value}
-                            onChange={(e) => setTownNameF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setTownNameF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.addressTownName && <div className="fieldError">{errors.addressTownName}</div>}
                     </div>
@@ -542,7 +617,7 @@ export default function OrganizationQueryTab() {
                     {/* Town X (float) */}
                     <div className="filterItem">
                         <div className="filterLabel">Address town X</div>
-                        <select value={townXF.op} onChange={(e) => setTownXF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={townXF.op} onChange={(e) => setTownXF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -554,7 +629,7 @@ export default function OrganizationQueryTab() {
                             inputMode="decimal"
                             placeholder="float"
                             value={townXF.value}
-                            onChange={(e) => setTownXF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setTownXF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.addressTownX && <div className="fieldError">{errors.addressTownX}</div>}
                     </div>
@@ -562,7 +637,7 @@ export default function OrganizationQueryTab() {
                     {/* Town Y (int) */}
                     <div className="filterItem">
                         <div className="filterLabel">Address town Y</div>
-                        <select value={townYF.op} onChange={(e) => setTownYF((p) => ({ ...p, op: e.target.value }))}>
+                        <select value={townYF.op} onChange={(e) => setTownYF((p) => ({...p, op: e.target.value}))}>
                             <option value="">—</option>
                             {NUM_OPS.map((o) => (
                                 <option key={o.value} value={o.value}>
@@ -574,7 +649,7 @@ export default function OrganizationQueryTab() {
                             inputMode="numeric"
                             placeholder="integer"
                             value={townYF.value}
-                            onChange={(e) => setTownYF((p) => ({ ...p, value: e.target.value }))}
+                            onChange={(e) => setTownYF((p) => ({...p, value: e.target.value}))}
                         />
                         {errors.addressTownY && <div className="fieldError">{errors.addressTownY}</div>}
                     </div>
@@ -625,7 +700,8 @@ export default function OrganizationQueryTab() {
                         </label>
 
                         <div className="pager">
-                            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={isFetching || page <= 1}>
+                            <button onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={isFetching || page <= 1}>
                                 ‹ Prev
                             </button>
 
@@ -664,13 +740,13 @@ export default function OrganizationQueryTab() {
                     </div>
                 )}
 
-                <div className="tableWrap" style={{ ["--rows" as any]: size }}>
+                <div className="tableWrap" style={{["--rows" as any]: size}}>
                     {isFetching && data && <div className="loadingOverlay">Loading…</div>}
 
                     <table className="table">
                         <thead>
                         <tr>
-                            <th className="thSortable" onClick={() => toggleSort("id")} style={{ width: 90 }}>
+                            <th className="thSortable" onClick={() => toggleSort("id")} style={{width: 90}}>
                                 ID {sort?.field === "id" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
                             <th className="thSortable" onClick={() => toggleSort("name")}>
@@ -679,13 +755,14 @@ export default function OrganizationQueryTab() {
                             <th className="thSortable" onClick={() => toggleSort("fullName")}>
                                 Full name {sort?.field === "fullName" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
-                            <th className="thSortable" onClick={() => toggleSort("creationDate")} style={{ width: 140 }}>
+                            <th className="thSortable" onClick={() => toggleSort("creationDate")} style={{width: 140}}>
                                 Created {sort?.field === "creationDate" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
-                            <th className="thSortable" onClick={() => toggleSort("annualTurnover")} style={{ width: 150 }}>
+                            <th className="thSortable" onClick={() => toggleSort("annualTurnover")}
+                                style={{width: 150}}>
                                 Turnover {sort?.field === "annualTurnover" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
-                            <th className="thSortable" onClick={() => toggleSort("type")} style={{ width: 150 }}>
+                            <th className="thSortable" onClick={() => toggleSort("type")} style={{width: 150}}>
                                 Type {sort?.field === "type" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
                             <th className="thSortable" onClick={() => toggleSort("coordinates")}>
@@ -694,7 +771,7 @@ export default function OrganizationQueryTab() {
                             <th className="thSortable" onClick={() => toggleSort("officialAddress")}>
                                 Official address {sort?.field === "officialAddress" ? (sort.desc ? "▼" : "▲") : ""}
                             </th>
-                            <th style={{ width: 170 }}>Actions</th>
+                            <th style={{width: 170}}>Actions</th>
                         </tr>
                         </thead>
 
@@ -725,7 +802,7 @@ export default function OrganizationQueryTab() {
                                             : ""}
                                     </td>
                                     <td>
-                                        <div style={{ display: "flex", gap: 8 }}>
+                                        <div style={{display: "flex", gap: 8}}>
                                             <button onClick={() => openUpdate(o)}>Update</button>
                                             <button onClick={() => openDelete(o.id)}>Delete</button>
                                         </div>

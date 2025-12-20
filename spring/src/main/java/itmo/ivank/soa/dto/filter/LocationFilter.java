@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 
 public record LocationFilter(
         @Valid NumberFilter<Float> xFilter,
-        @Valid NumberFilter<Integer> yFilter,
+        @Valid NumberFilter<Long> yFilter,
         @Valid StringFilter nameFilter
 ) {
 }

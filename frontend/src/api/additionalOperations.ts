@@ -29,7 +29,8 @@ function xmlEscape(s: string): string {
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
-        .replaceAll("'", "&apos;");
+        .replaceAll("'", "&apos;")
+        .replaceAll("%", "&#37;");
 }
 
 function parseOrganizationsPage(xml: string): OrganizationsPage {

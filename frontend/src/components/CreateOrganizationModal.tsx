@@ -76,6 +76,34 @@ function parseIntOrNull(s: string): number | null {
     return Number.isInteger(n) ? n : null;
 }
 
+function parseFloatOrNullMaxScale(raw: string, maxScale = 8): { value: number | null; error?: string } {
+    const v0 = raw.trim();
+    if (v0 === "") return { value: null };
+
+    // если хочешь поддержать запятую как десятичный разделитель — оставь replace
+    const v = v0.replace(",", ".");
+
+    // не даём экспоненциальную запись, только обычное число
+    if (!/^[+-]?\d+(\.\d+)?$/.test(v)) {
+        return { value: null, error: "Invalid number" };
+    }
+
+    const dotIdx = v.indexOf(".");
+    if (dotIdx !== -1) {
+        const frac = v.slice(dotIdx + 1);
+        if (frac.length > maxScale) {
+            return { value: null, error: `Fractional part must be ≤ ${maxScale} digits` };
+        }
+    }
+
+    const n = Number(v);
+    if (!Number.isFinite(n)) {
+        return { value: null, error: "Invalid number" };
+    }
+
+    return { value: n };
+}
+
 export function CreateOrganizationModal({open, onClose, onCreated, mode = "create", initialOrganization = null,}: Props) {
     const [form, setForm] = React.useState<FormState>(initialState);
     const [errors, setErrors] = React.useState<Errors>({});
@@ -141,6 +169,10 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
         // name: @NotNull @NotBlank
         if (isBlank(form.name)) e.name = "Name is required";
 
+        if (!isBlank(form.name) && form.name.trim().length > 255) {
+            e.name = "Name must be ≤ 255 chars";
+        }
+
         // coordinates: required
         const cx = parseIntOrNull(form.coordinatesX);
         if (cx === null) {
@@ -149,24 +181,30 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             e.coordinatesX = "X must be ≥ -826";
         }
 
-        const cy = parseNumberOrNull(form.coordinatesY);
-        if (cy === null) {
-            e.coordinatesY = "Y is required";
-        } else if (cy < -143) {
+        const cyRes = parseFloatOrNullMaxScale(form.coordinatesY, 8);
+        if (cyRes.value === null) {
+            e.coordinatesY = cyRes.error ?? "Y is required";
+        } else if (cyRes.value < -143) {
             e.coordinatesY = "Y must be ≥ -143";
         }
 
+
         // annualTurnover: @NotNull @Positive
-        const at = parseNumberOrNull(form.annualTurnover);
-        if (at === null) {
-            e.annualTurnover = "Annual turnover is required";
-        } else if (at <= 0) {
+        const atRes = parseFloatOrNullMaxScale(form.annualTurnover, 8);
+        if (atRes.value === null) {
+            e.annualTurnover = atRes.error ?? "Annual turnover is required";
+        } else if (atRes.value <= 0) {
             e.annualTurnover = "Annual turnover must be > 0";
         }
+
 
         // fullName: @Pattern(^(?!\s*$).+) => optional, но если задано — не пробелы
         if (form.fullName.length > 0 && isBlank(form.fullName)) {
             e.fullName = "Full name cannot be blank";
+        }
+
+        if (!isBlank(form.fullName) && form.fullName.trim().length > 255) {
+            e.fullName = "Full name must be ≤ 255 chars";
         }
 
         // type: @NotNull
@@ -186,8 +224,8 @@ export function CreateOrganizationModal({open, onClose, onCreated, mode = "creat
             else if (form.street.trim().length > 147) e.street = "Street must be ≤ 147 chars";
 
             // town.x: @NotNull Float
-            const tx = parseNumberOrNull(form.townX);
-            if (tx === null) e.townX = "Town X is required";
+            const txRes = parseFloatOrNullMaxScale(form.townX, 8);
+            if (txRes.value === null) e.townX = txRes.error ?? "Town X is required";
 
             // town.y: @NotNull Long (integer)
             const ty = parseIntOrNull(form.townY);
