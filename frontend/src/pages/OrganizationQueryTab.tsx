@@ -93,16 +93,6 @@ function isBlank(s: string) {
     return s.trim().length === 0;
 }
 
-function xmlEscape(s: string): string {
-    return s
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&apos;")
-        .replaceAll("%", "&#37;");
-}
-
 function parseNumberOrNull(s: string): number | null {
     if (s.trim() === "") return null;
     const n = Number(s);
@@ -349,7 +339,7 @@ export default function OrganizationQueryTab() {
                 return null;
             }
 
-            return { op: row.op as QueryStrOp, value: xmlEscape(v) };
+            return { op: row.op as QueryStrOp, value: v };
         };
 
 
