@@ -112,7 +112,7 @@ function parseLongOrNull(raw: string): { value: number | null; error?: string } 
     }
 
     if (bi < JAVA_LONG_MIN || bi > JAVA_LONG_MAX) {
-        return { value: null, error: "Out of range for Java long" };
+        return { value: null, error: "Out of range for long" };
     }
 
     // Чтобы не было потери точности в JS number
@@ -297,7 +297,7 @@ export default function OrganizationQueryTab() {
         // Для scale>0 toFixed даёт "X.YYY" — canonical такой же формы
         // Для scale=0 toFixed(0) даёт "X" — canonical тоже "X"
         if (f32Fixed !== canonicalForCompare) {
-            return { value: null, error: "Value will lose precision in Java Float (it will be rounded/truncated)" };
+            return { value: null, error: "Value will lose precision in float (it will be rounded/truncated)" };
         }
 
         return { value: f32 };
