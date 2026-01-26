@@ -1,19 +1,6 @@
 openapi: 3.0.3
 info:
   title: SOA Lab Course API
-  description: |
-    API спецификация для двух сервисов:
-    - **Spring Service** - основной CRUD сервис для организаций и сотрудников
-    - **JAX-RS Service** - сервис дополнительных операций (поглощение организаций, увольнение сотрудников)
-    
-    Оба сервиса работают в контейнерах WildFly и используют XML формат для передачи данных.
-  version: 1.0.0
-
-servers:
-  - url: https://spring-service/api/v1
-    description: Spring Service (CRUD операции)
-  - url: https://jax-rs-service/api/v1
-    description: JAX-RS Service (дополнительные операции)
 
 tags:
   - name: Organizations
@@ -24,7 +11,7 @@ tags:
     description: Дополнительные операции (JAX-RS Service)
 
 paths:
-  # ==================== SPRING SERVICE: Organizations ====================
+  /soa/api/v1:
   /organizations:
     get:
       tags:
@@ -495,6 +482,7 @@ paths:
         '200':
           description: Сотрудники удалены
 
+  /orgmanager/api/v1:
   # ==================== JAX-RS SERVICE: Additional Operations ====================
   /acquire/{acquirer-id}/{acquired-id}:
     post:
