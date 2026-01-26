@@ -103,31 +103,6 @@ services:
       retries: 10
       start_period: 30s
 
-  # Caller service (Spring Cloud with Ribbon)
-  caller-service:
-    build: caller-service
-    ports:
-      - '8445:8080'
-    environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      CALLED_SERVICE_URL: https://called-web:8443/soa/api/v1
-    container_name: soa-caller-service
-    profiles:
-      - disabled
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      called-web:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/orgmanager/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   # Mule ESB Integration Bus (SOAP Caller -> Called Service)
   mule-esb:
     build:
