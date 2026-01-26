@@ -1,760 +1,931 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: ITMO SOA Lab Work
-  description: |-
-    API specification for a lab work of a Service-Oriented Architecture course
-    at ITMO University.
+  title: SOA Lab Course API
+  description: |
+    API спецификация для двух сервисов:
+    - **Spring Service** - основной CRUD сервис для организаций и сотрудников
+    - **JAX-RS Service** - сервис дополнительных операций (поглощение организаций, увольнение сотрудников)
     
-    - Student: Ivan Kozhukhin
-    - Group: P3418
-    - Class: 1.6
-    - Variant: 8407
+    Оба сервиса работают в контейнерах WildFly и используют XML формат для передачи данных.
   version: 1.0.0
+
 servers:
-  - url: https://localhost:8443/soa-dev/api/v1
+  - url: https://spring-service/api/v1
+    description: Spring Service (CRUD операции)
+  - url: https://jax-rs-service/api/v1
+    description: JAX-RS Service (дополнительные операции)
+
 tags:
   - name: Organizations
-    description: Basic organization operations
-  - name: OrgManager
-    description: Advanced organization operations
+    description: Операции с организациями (Spring Service)
   - name: Employees
-    description: Basic employee operations
+    description: Операции с сотрудниками (Spring Service)
+  - name: Additional Operations
+    description: Дополнительные операции (JAX-RS Service)
+
 paths:
+  # ==================== SPRING SERVICE: Organizations ====================
   /organizations:
     get:
       tags:
         - Organizations
-      summary: Get all organizations
-      description: |-
-        Get organizations by page (optional) without any filters or sorting
-      operationId: getOrgs
+      summary: Получить список всех организаций с пагинацией
+      operationId: getAllOrganizations
       parameters:
         - name: page
           in: query
-          description: Number of the page (default - 1)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 1
+          description: Номер страницы
         - name: size
           in: query
-          description: Size of the page (default - 20)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 20
+          description: Размер страницы
       responses:
         '200':
-          description: Successful operation
+          description: Список организаций
           content:
             application/xml:
               schema:
-                  $ref: '#/components/schemas/OrganizationsPage'
+                $ref: '#/components/schemas/OrganizationsPage'
         '400':
-          description: Invalid query parameters
+          description: Некорректные параметры запроса
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
     post:
       tags:
         - Organizations
-      summary: Create an organization
-      description: Create a new organization with set parameters
-      operationId: createOrg
+      summary: Создать новую организацию
+      operationId: createOrganization
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
               $ref: '#/components/schemas/OrganizationRequest'
-        required: true
       responses:
-        '201':
-          description: Successful operation
+        '200':
+          description: Созданная организация
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Organization'
-          headers:
-            Location:
-              description: URL of a created organization
-              schema:
-                type: string
-                example: /organizations/12
         '400':
-          description: Invalid parameters
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /organizations/query:
     post:
       tags:
         - Organizations
-      summary: Get filtered organizations
-      description: |-
-        Get organizations by page (optional) with filters and sorting
-      operationId: getOrgsQuery
+      summary: Получить организации с фильтрацией и сортировкой
+      operationId: getFilteredOrganizations
       parameters:
         - name: page
           in: query
-          description: Number of the page (default - 1)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 1
         - name: size
           in: query
-          description: Size of the page (default - 20)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 20
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
               $ref: '#/components/schemas/OrganizationQuery'
-        required: false
       responses:
         '200':
-          description: Successful operation
+          description: Отфильтрованный список организаций
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/OrganizationsPage'
         '400':
-          description: Invalid query parameters
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /organizations/{id}:
     get:
       tags:
         - Organizations
-      summary: Get an organization
-      description: Get an organization by id
-      operationId: getOrgById
+      summary: Получить организацию по ID
+      operationId: getOrganization
       parameters:
         - name: id
-          required: true
           in: path
-          description: Organization id
+          required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
+          description: Организация
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Organization'
         '404':
-          description: No organization with such id
+          description: Организация не найдена
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
     put:
       tags:
         - Organizations
-      summary: Fully update an organization
-      description: Update all of the fields of an organization by id
-      operationId: fullUpdateOrg
+      summary: Обновить организацию
+      operationId: updateOrganization
       parameters:
         - name: id
-          required: true
           in: path
-          description: Organization id
+          required: true
           schema:
             type: integer
             format: int64
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
               $ref: '#/components/schemas/OrganizationRequest'
-        required: true
       responses:
         '200':
-          description: Successful operation
+          description: Обновлённая организация
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Organization'
         '400':
-          description: Invalid parameters
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
         '404':
-          description: No organization with such id
+          description: Организация не найдена
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
     delete:
       tags:
         - Organizations
-      summary: Delete an organization
-      description: Delete an organization by id
-      operationId: deleteOrgById
+      summary: Удалить организацию
+      operationId: deleteOrganization
       parameters:
         - name: id
-          required: true
           in: path
-          description: Organization id
+          required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Organization'
+          description: Организация удалена
         '404':
-          description: No organization with such id
+          description: Организация не найдена
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /organizations/{id}/employees:
     get:
       tags:
         - Organizations
-      summary: Get organization employees
-      description: |-
-        Get employees of an organization by id
-      operationId: getOrgEmployees
+      summary: Получить сотрудников организации
+      operationId: getOrganizationEmployees
       parameters:
         - name: id
           in: path
-          description: Organization id
           required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
+          description: Список сотрудников
           content:
             application/xml:
               schema:
-                type: array
-                xml:
-                  name:
-                    employees
-                items:
-                  $ref: '#/components/schemas/Employee'
+                $ref: '#/components/schemas/EmployeesList'
         '404':
-          description: No organization with such id
+          description: Организация не найдена
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /organizations/turnover:
     get:
       tags:
         - Organizations
-      summary: Get total turnover
-      description: Get the sum of annual turnover of all Organizations
-      operationId: totalTurnover
+      summary: Получить суммарный годовой оборот всех организаций
+      operationId: getTotalTurnover
       responses:
         '200':
-          description: Successful operation
+          description: Суммарный оборот
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/TurnoverResponse'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /organizations/types:
     get:
       tags:
         - Organizations
-      summary: Get number of organizations of each type
-      description: Get the number of organizations grouped by type
-      operationId: countByType
+      summary: Получить количество организаций по типам
+      operationId: getOrganizationTypesCount
       responses:
         '200':
-          description: Successful operation
+          description: Количество организаций по типам
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/GroupByTypeResponse'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+                $ref: '#/components/schemas/TypeCountResponse'
+
   /organizations/lt-full-name:
     post:
       tags:
         - Organizations
-      summary: Get Organizations with fullName less than stated
-      description: Get a list of Organizations by page with the fullName value less than stated in lexicographic order
-      operationId: ltFullName
+      summary: Получить организации с fullName меньше заданного
+      operationId: getOrganizationsLessThanFullName
       parameters:
         - name: page
           in: query
-          description: Number of the page (default - 1)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 1
         - name: size
           in: query
-          description: Size of the page (default - 20)
-          required: false
           schema:
             type: integer
-            format: int64
+            default: 20
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
-              type: string
-              xml:
-                name:
-                  fullNameValue
-        required: true
+              $ref: '#/components/schemas/FullNameValue'
       responses:
         '200':
-          description: Successful operation
+          description: Список организаций
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/OrganizationsPage'
-        default:
-          description: Unexpected error
+
+  /organizations/compensate:
+    post:
+      tags:
+        - Organizations
+      summary: Компенсационная операция создания организации (для SAGA)
+      operationId: compensateOrganization
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrganizationRequest'
+      responses:
+        '200':
+          description: Созданная организация
           content:
             application/xml:
               schema:
-                $ref: '#/components/schemas/AppError'
+                $ref: '#/components/schemas/Organization'
+
+  # ==================== SPRING SERVICE: Employees ====================
   /employees:
     post:
       tags:
         - Employees
-      summary: Create an employee
-      description: Create a new employee with set parameters
+      summary: Создать нового сотрудника
       operationId: createEmployee
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
               $ref: '#/components/schemas/EmployeeRequest'
-        required: true
       responses:
-        '201':
-          description: Successful operation
+        '200':
+          description: Созданный сотрудник
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Employee'
-          headers:
-            Location:
-              description: URL of a created employee
-              schema:
-                type: string
-                example: /employees/12
         '400':
-          description: Invalid parameters
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        '404':
-          description: No organization with such id
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
   /employees/{id}:
+    get:
+      tags:
+        - Employees
+      summary: Получить сотрудника по ID
+      operationId: getEmployee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Сотрудник
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: Сотрудник не найден
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
     put:
       tags:
         - Employees
-      summary: Update an employee
-      description: Update an employee by id
+      summary: Обновить сотрудника
       operationId: updateEmployee
       parameters:
         - name: id
           in: path
-          description: Employee id
           required: true
           schema:
             type: integer
             format: int64
       requestBody:
+        required: true
         content:
           application/xml:
             schema:
               $ref: '#/components/schemas/EmployeeRequest'
-        required: true
       responses:
         '200':
-          description: Successful operation
+          description: Обновлённый сотрудник
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Employee'
-        '404':
-          description: No employee or organization with such id
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
         '400':
-          description: Invalid parameters
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
-    get:
-      tags:
-        - Employees
-      summary: Get an employee
-      description: Get an employee by id
-      operationId: getEmployeeById
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: Employee id
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Employee'
         '404':
-          description: No employee with such id
+          description: Сотрудник не найден
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
+
     delete:
       tags:
         - Employees
-      summary: Delete an employee
-      description: Delete an employee by id
-      operationId: deleteEmployeeById
+      summary: Удалить сотрудника
+      operationId: deleteEmployee
       parameters:
         - name: id
-          required: true
           in: path
-          description: Employee id
+          required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Employee'
+          description: Сотрудник удалён
         '404':
-          description: No employee with such id
+          description: Сотрудник не найден
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
-  /orgmanager/fire/all/{id}:
+
+  /employees/batch/create:
     post:
       tags:
-        - OrgManager
-      summary: Fire employees of an organization
-      description: Fire all employees of an organization by id
-      operationId: fireAllEmployeesByOrgId
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: Organization id
-          schema:
-            type: integer
-            format: int64
+        - Employees
+      summary: Массовое создание сотрудников
+      operationId: createBatchEmployees
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequestList'
       responses:
         '200':
-          description: Successful operation
+          description: Список созданных сотрудников
           content:
             application/xml:
               schema:
-                type: integer
-                xml:
-                  name:
-                    employeeCount
-        '404':
-          description: No organization with such id
-          content:
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
+                $ref: '#/components/schemas/EmployeesList'
+        '400':
+          description: Ошибка валидации
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
+
+  /employees/batch/update:
+    post:
+      tags:
+        - Employees
+      summary: Массовое обновление сотрудников
+      operationId: updateBatchEmployees
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequestList'
+      responses:
+        '200':
+          description: Список обновлённых сотрудников
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EmployeesList'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
+  /employees/batch/delete:
+    post:
+      tags:
+        - Employees
+      summary: Массовое удаление сотрудников
+      operationId: deleteBatchEmployees
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/IdList'
+      responses:
+        '200':
+          description: Сотрудники удалены
+
+  # ==================== JAX-RS SERVICE: Additional Operations ====================
   /acquire/{acquirer-id}/{acquired-id}:
     post:
       tags:
-        - OrgManager
-      summary: Acquire organization
-      description: |-
-        Acquire one organization (acquired) by another (acquirer)
-        transferring all employees to acquirer organization
-      operationId: acquire
+        - Additional Operations
+      summary: Поглощение одной организации другой
+      description: |
+        Переводит всех сотрудников из поглощаемой организации (acquired) 
+        в организацию-поглотитель (acquirer), после чего удаляет поглощённую организацию.
+      operationId: acquireOrganization
       parameters:
         - name: acquirer-id
-          required: true
           in: path
-          description: Acquirer organization id
+          required: true
+          description: ID организации-поглотителя
           schema:
             type: integer
             format: int64
         - name: acquired-id
-          required: true
           in: path
-          description: Acquired organization id
+          required: true
+          description: ID поглощаемой организации
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
+          description: Результат поглощения
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Acquiring'
         '404':
-          description: No organization with such id
+          description: Одна из организаций не найдена
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
-        default:
-          description: Unexpected error
+        '500':
+          description: Внутренняя ошибка сервера
           content:
             application/xml:
               schema:
                 $ref: '#/components/schemas/AppError'
+
+  /fire/all/{id}:
+    post:
+      tags:
+        - Additional Operations
+      summary: Уволить всех сотрудников организации
+      description: Удаляет всех сотрудников указанной организации
+      operationId: fireAllOrgEmployees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID организации
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Количество уволенных сотрудников
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/FireResponse'
+        '404':
+          description: Организация не найдена
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppError'
+
 components:
   schemas:
+    # ==================== Entity Schemas ====================
     Organization:
       type: object
+      xml:
+        name: organization
       properties:
         id:
           type: integer
           format: int64
-          example: 1
+          description: Уникальный идентификатор организации
         name:
           type: string
-          example: ITMO
-        coordinates:
-          $ref: '#/components/schemas/Coordinates'
+          maxLength: 255
+          description: Название организации
         creationDate:
           type: string
           format: date
-          example: 2025-09-26
+          description: Дата создания организации
         annualTurnover:
-          type: integer
-          format: int64
-          example: 9001
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+          description: Годовой оборот
         fullName:
           type: string
-          example: ITMO Corporation
+          maxLength: 255
+          description: Полное наименование организации
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
         type:
-          type: string
-          enum:
-            - COMMERCIAL
-            - GOVERNMENT
-            - PRIVATE_LIMITED_COMPANY
-            - OPEN_JOINT_STOCK_COMPANY
+          $ref: '#/components/schemas/OrganizationType'
         officialAddress:
           $ref: '#/components/schemas/Address'
-      xml:
-        name: organization
-    OrganizationsPage:
-      type: object
-      properties:
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Organization'
-        page:
-          type: integer
-        size:
-          type: integer
-        totalElements:
-          type: integer
-        totalPages:
-          type: integer
-      xml:
-        name:
-          organizationsPage
+
     Employee:
       type: object
+      xml:
+        name: employee
       properties:
         id:
           type: integer
           format: int64
-          example: 1
+          description: Уникальный идентификатор сотрудника
         name:
           type: string
-          example: Nikola Strawinsky
+          maxLength: 128
+          description: Имя сотрудника
         salary:
           type: integer
           format: int64
-          example: 1
-        organizationId:
+          minimum: 1
+          description: Зарплата сотрудника
+        organization:
+          $ref: '#/components/schemas/Organization'
+
+    Coordinates:
+      type: object
+      xml:
+        name: coordinates
+      required:
+        - x
+        - y
+      properties:
+        x:
           type: integer
           format: int64
-          example: 1
+          minimum: -826
+          description: Координата X
+        y:
+          type: number
+          format: float
+          minimum: -143
+          description: Координата Y
+
+    Address:
+      type: object
       xml:
-        name: employee
+        name: officialAddress
+      required:
+        - street
+      properties:
+        street:
+          type: string
+          maxLength: 147
+          description: Улица
+        town:
+          $ref: '#/components/schemas/Location'
+
+    Location:
+      type: object
+      xml:
+        name: town
+      required:
+        - x
+        - y
+        - name
+      properties:
+        x:
+          type: number
+          format: float
+          description: Координата X населённого пункта
+        y:
+          type: integer
+          format: int64
+          description: Координата Y населённого пункта
+        name:
+          type: string
+          description: Название населённого пункта
+
+    OrganizationType:
+      type: string
+      enum:
+        - COMMERCIAL
+        - GOVERNMENT
+        - PRIVATE_LIMITED_COMPANY
+        - OPEN_JOINT_STOCK_COMPANY
+      description: Тип организации
+
+    # ==================== Request Schemas ====================
+    OrganizationRequest:
+      type: object
+      xml:
+        name: organizationRequest
+      required:
+        - name
+        - coordinates
+        - annualTurnover
+        - type
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: ID организации (для обновления)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Название организации
+        creationDate:
+          type: string
+          format: date
+          description: Дата создания организации
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        annualTurnover:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+          description: Годовой оборот (положительное число)
+        fullName:
+          type: string
+          maxLength: 255
+          pattern: '^(?!\s*$).+'
+          description: Полное наименование (не может быть пустой строкой)
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+        officialAddress:
+          $ref: '#/components/schemas/Address'
+
     EmployeeRequest:
       type: object
-      properties:
-        name:
-          type: string
-          example: Nikola Strawinsky
-        salary:
-          type: integer
-          format: int64
-          example: 1
-        organizationId:
-          type: integer
-          format: int64
-          example: 1
+      xml:
+        name: employeeRequest
       required:
         - name
         - salary
         - organizationId
-      xml:
-        name: employeeRequest
-    OrganizationRequest:
-      type: object
       properties:
-        name:
-          type: string
-          example: ITMO
-        coordinates:
-          $ref: '#/components/schemas/Coordinates'
-        annualTurnover:
+        id:
           type: integer
           format: int64
-          example: 9001
-        fullName:
+          minimum: 1
+          description: ID сотрудника (для обновления)
+        name:
           type: string
-          example: ITMO Corporation
-        type:
-          type: string
-          enum:
-            - COMMERCIAL
-            - GOVERNMENT
-            - PRIVATE_LIMITED_COMPANY
-            - OPEN_JOINT_STOCK_COMPANY
-        officialAddress:
-          $ref: '#/components/schemas/Address'
-      required:
-        - name
-        - coordinates
-        - type
+          minLength: 1
+          maxLength: 128
+          description: Имя сотрудника
+        salary:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Зарплата (положительное число)
+        organizationId:
+          type: integer
+          format: int64
+          description: ID организации сотрудника
+
+    EmployeeRequestList:
+      type: array
       xml:
-        name: organizationRequest
-    OrganizationQuery:
-      description: All fields are optional
+        name: list
+        wrapped: true
+      items:
+        $ref: '#/components/schemas/EmployeeRequest'
+
+    IdList:
+      type: array
+      xml:
+        name: list
+        wrapped: true
+      items:
+        type: integer
+        format: int64
+
+    # ==================== Response Schemas ====================
+    OrganizationsPage:
       type: object
+      xml:
+        name: organizationsPage
+      properties:
+        organizations:
+          type: array
+          xml:
+            name: organizations
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Organization'
+        page:
+          type: integer
+          description: Текущая страница
+        size:
+          type: integer
+          description: Размер страницы
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+        totalPages:
+          type: integer
+          description: Общее количество страниц
+
+    EmployeesList:
+      type: object
+      xml:
+        name: employees
+      properties:
+        employees:
+          type: array
+          xml:
+            wrapped: false
+          items:
+            $ref: '#/components/schemas/Employee'
+
+    TurnoverResponse:
+      type: object
+      xml:
+        name: turnoverResponse
+      properties:
+        totalTurnover:
+          type: number
+          format: double
+          description: Суммарный годовой оборот
+        organizationCount:
+          type: integer
+          description: Количество организаций
+
+    TypeCountResponse:
+      type: object
+      xml:
+        name: typeCounts
+      properties:
+        types:
+          type: array
+          xml:
+            wrapped: false
+          items:
+            $ref: '#/components/schemas/TypeCount'
+
+    TypeCount:
+      type: object
+      xml:
+        name: typeCount
+      properties:
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+        count:
+          type: integer
+          description: Количество организаций данного типа
+
+    FullNameValue:
+      type: object
+      xml:
+        name: fullNameValue
+      properties:
+        value:
+          type: string
+          description: Значение fullName для сравнения
+
+    # ==================== JAX-RS Response Schemas ====================
+    Acquiring:
+      type: object
+      xml:
+        name: acquiring
+      properties:
+        acquirerOrganization:
+          $ref: '#/components/schemas/Organization'
+          description: Организация-поглотитель
+        acquiredOrganization:
+          $ref: '#/components/schemas/Organization'
+          description: Поглощённая организация
+        numberOfEmployeesMoved:
+          type: integer
+          description: Количество перемещённых сотрудников
+
+    FireResponse:
+      type: object
+      xml:
+        name: employeeCount
+      properties:
+        employeeCount:
+          type: integer
+          description: Количество уволенных сотрудников
+
+    # ==================== Error Schema ====================
+    AppError:
+      type: object
+      xml:
+        name: appError
+      properties:
+        code:
+          type: integer
+          description: Код ошибки
+        message:
+          type: string
+          description: Сообщение об ошибке
+
+    # ==================== Filter Schemas (for OrganizationQuery) ====================
+    OrganizationQuery:
+      type: object
+      xml:
+        name: organizationQuery
       properties:
         sort:
           type: array
+          minItems: 1
           items:
             type: string
-          description: |-
-            Name all sorting parameters, add '-' to the name for descending
+          description: |
+            Список полей для сортировки. 
+            Формат: "fieldName" или "-fieldName" (для сортировки по убыванию)
+          example:
+            - "name"
+            - "-creationDate"
         idFilter:
-          $ref: '#/components/schemas/LongFilter'
+          $ref: '#/components/schemas/NumberFilterLong'
         nameFilter:
           $ref: '#/components/schemas/StringFilter'
         coordinatesFilter:
@@ -762,218 +933,151 @@ components:
         creationDateFilter:
           $ref: '#/components/schemas/DateFilter'
         annualTurnoverFilter:
-          $ref: '#/components/schemas/FloatFilter'
+          $ref: '#/components/schemas/NumberFilterFloat'
         fullNameFilter:
           $ref: '#/components/schemas/StringFilter'
         typeFilter:
           $ref: '#/components/schemas/TypeFilter'
-        addressFilter:
+        officialAddressFilter:
           $ref: '#/components/schemas/AddressFilter'
+
+    NumberFilterLong:
+      type: object
       xml:
-        name: organizationQuery
-    LongFilter:
+        name: numberFilter
+      description: Фильтр для числовых полей (Long)
+      properties:
+        eq:
+          type: integer
+          format: int64
+          description: Равно
+        gt:
+          type: integer
+          format: int64
+          description: Больше
+        ge:
+          type: integer
+          format: int64
+          description: Больше или равно
+        lt:
+          type: integer
+          format: int64
+          description: Меньше
+        le:
+          type: integer
+          format: int64
+          description: Меньше или равно
+
+    NumberFilterFloat:
       type: object
-      properties:
-        eq:
-          type: integer
-          format: int64
-        gt:
-          type: integer
-          format: int64
-        ge:
-          type: integer
-          format: int64
-        lt:
-          type: integer
-          format: int64
-        le:
-          type: integer
-          format: int64
-    IntFilter:
-      type: object
-      properties:
-        eq:
-          type: integer
-          format: int32
-        gt:
-          type: integer
-          format: int32
-        ge:
-          type: integer
-          format: int32
-        lt:
-          type: integer
-          format: int32
-        le:
-          type: integer
-          format: int32
-    FloatFilter:
+      xml:
+        name: numberFilter
+      description: Фильтр для числовых полей (Float)
       properties:
         eq:
           type: number
           format: float
+          description: Равно
         gt:
           type: number
           format: float
+          description: Больше
         ge:
           type: number
           format: float
+          description: Больше или равно
         lt:
           type: number
           format: float
+          description: Меньше
         le:
           type: number
           format: float
+          description: Меньше или равно
+
     StringFilter:
       type: object
+      xml:
+        name: stringFilter
+      description: Фильтр для строковых полей
       properties:
         eq:
           type: string
+          description: Точное совпадение
         contains:
           type: string
+          description: Содержит подстроку
         startsWith:
           type: string
+          description: Начинается с
         endsWith:
           type: string
+          description: Заканчивается на
+
     DateFilter:
       type: object
+      xml:
+        name: dateFilter
+      description: Фильтр для полей с датой
       properties:
         eq:
           type: string
           format: date
+          description: Равно дате
         before:
           type: string
           format: date
+          description: До указанной даты
         after:
           type: string
           format: date
+          description: После указанной даты
+
     TypeFilter:
       type: object
+      xml:
+        name: typeFilter
+      description: Фильтр для типа организации
       properties:
         eq:
-          type: string
-          enum:
-            - COMMERCIAL
-            - GOVERNMENT
-            - PRIVATE_LIMITED_COMPANY
-            - OPEN_JOINT_STOCK_COMPANY
+          $ref: '#/components/schemas/OrganizationType'
         in:
           type: array
           items:
-            type: string
-            enum:
-              - COMMERCIAL
-              - GOVERNMENT
-              - PRIVATE_LIMITED_COMPANY
-              - OPEN_JOINT_STOCK_COMPANY
+            $ref: '#/components/schemas/OrganizationType'
+          description: Один из указанных типов
+
     CoordinatesFilter:
       type: object
+      xml:
+        name: coordinatesFilter
+      description: Фильтр для координат
       properties:
         xFilter:
-          $ref: '#/components/schemas/IntFilter'
+          $ref: '#/components/schemas/NumberFilterLong'
         yFilter:
-          $ref: '#/components/schemas/LongFilter'
+          $ref: '#/components/schemas/NumberFilterFloat'
+
     AddressFilter:
       type: object
+      xml:
+        name: addressFilter
+      description: Фильтр для адреса
       properties:
         streetFilter:
           $ref: '#/components/schemas/StringFilter'
-        locationFilter:
+        townFilter:
           $ref: '#/components/schemas/LocationFilter'
+
     LocationFilter:
       type: object
+      xml:
+        name: locationFilter
+      description: Фильтр для населённого пункта
       properties:
         xFilter:
-          $ref: '#/components/schemas/FloatFilter'
+          $ref: '#/components/schemas/NumberFilterFloat'
         yFilter:
-          $ref: '#/components/schemas/IntFilter'
+          $ref: '#/components/schemas/NumberFilterLong'
         nameFilter:
           $ref: '#/components/schemas/StringFilter'
-    Coordinates:
-      type: object
-      properties:
-        x:
-          type: integer
-          format: int32
-          example: 42
-        y:
-          type: integer
-          format: int64
-          example: 1337
-      required:
-        - x
-      xml:
-        name: coordinates
-    Address:
-      type: object
-      properties:
-        street:
-          type: string
-          example: Lomonosova 9
-        town:
-          $ref: '#/components/schemas/Location'
-      required:
-        - street
-      xml:
-        name: officialAddress
-    Location:
-      type: object
-      properties:
-        x:
-          type: number
-          format: float
-          example: 7.8
-        y:
-          type: integer
-          format: int32
-          example: 228
-        name:
-          type: string
-          example: Saint-Petersburg
-      required:
-        - x
-        - y
-        - name
-      xml:
-        name: town
-    Acquiring:
-      description: Result of an acquiring operation
-      type: object
-      properties:
-        acquirerOrganization:
-          allOf:
-            - $ref: '#/components/schemas/Organization'
-          xml:
-            name: acquirerOrganization
-        acquiredOrganization:
-          allOf:
-            - $ref: '#/components/schemas/Organization'
-          xml:
-            name: acquiredOrganization
-        numberOfEmployeesMoved:
-          type: integer
-          format: int64
-      xml:
-        name: acquiring
-    TurnoverResponse:
-      type: object
-      properties:
-        totalTurnover:
-          type: number
-          format: float
-        organizationCount:
-          type: integer
-    GroupByTypeResponse:
-      type: object
-      additionalProperties:
-        type: number
-        format: float
-    AppError:
-      type: object
-      properties:
-        code:
-          type: integer
-        message:
-          type: string
-      xml:
-        name: appError
