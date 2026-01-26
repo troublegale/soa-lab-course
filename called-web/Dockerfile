@@ -3,21 +3,22 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 
 WORKDIR /app
 
-# Copy called-ejb first (dependency for called-web)
+# Cache dependencies for called-ejb
 COPY called-ejb/pom.xml /app/called-ejb/pom.xml
-COPY called-ejb/src /app/called-ejb/src
+WORKDIR /app/called-ejb
+RUN mvn -B dependency:go-offline
 
 # Build and install called-ejb locally
-WORKDIR /app/called-ejb
+COPY called-ejb/src /app/called-ejb/src
 RUN mvn clean install -DskipTests
 
-# Copy called-web
-WORKDIR /app
+# Cache dependencies for called-web
+WORKDIR /app/called-web
 COPY called-web/pom.xml /app/called-web/pom.xml
-COPY called-web/src /app/called-web/src
+RUN mvn -B dependency:go-offline
 
 # Build called-web
-WORKDIR /app/called-web
+COPY called-web/src /app/called-web/src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Deploy to WildFly
