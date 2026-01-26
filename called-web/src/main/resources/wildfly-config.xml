@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <authentication-client xmlns="urn:elytron:client:1.7">
+        <authentication-rules>
+            <rule use-configuration="anonymous"/>
+        </authentication-rules>
+        <authentication-configurations>
+            <configuration name="anonymous">
+                <sasl-mechanism-selector selector="ANONYMOUS"/>
+                <set-anonymous/>
+            </configuration>
+        </authentication-configurations>
+    </authentication-client>
+    <jboss-ejb-client xmlns="urn:jboss:wildfly-client-ejb:3.2">
+        <invocation-timeout seconds="300"/>
+        <connections>
+            <connection uri="remote+http://called-ejb:8080"/>
+        </connections>
+    </jboss-ejb-client>
+</configuration>

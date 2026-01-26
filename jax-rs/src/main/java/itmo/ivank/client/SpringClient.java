@@ -1,5 +1,7 @@
 package itmo.ivank.client;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
 import itmo.ivank.dto.Acquiring;
 import itmo.ivank.dto.FireResponse;
 import itmo.ivank.dto.IdRequest;
@@ -10,21 +12,64 @@ import itmo.ivank.dto.employee.EmployeeRequestList;
 import itmo.ivank.dto.organization.Organization;
 import itmo.ivank.dto.organization.OrganizationRequest;
 import itmo.ivank.exception.*;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 
-
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
 import java.math.BigDecimal;
 import java.util.*;
 
 @ApplicationScoped
 public class SpringClient {
 
-    private static final String BASE_URL = "https://spring-wildfly:8443/soa/api/v1";
-    private final Client client = ClientBuilder.newClient();
+    private static final String BASE_URL = "https://called-web:8443/soa/api/v1";
+    private Client client;
+    private XmlMapper xmlMapper;
+
+    @PostConstruct
+    public void init() {
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+                public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+            }}, new java.security.SecureRandom());
+            
+            xmlMapper = new XmlMapper();
+            xmlMapper.registerModule(new JakartaXmlBindAnnotationModule());
+            
+            client = ClientBuilder.newBuilder()
+                    .sslContext(sslContext)
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize SSL context", e);
+        }
+    }
+    
+    private <T> T readXml(String xml, Class<T> clazz) {
+        try {
+            return xmlMapper.readValue(xml, clazz);
+        } catch (Exception e) {
+            throw new ClientException("Failed to parse XML: " + e.getMessage());
+        }
+    }
+    
+    private String writeXml(Object obj) {
+        try {
+            return xmlMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new ClientException("Failed to write XML: " + e.getMessage());
+        }
+    }
 
     public FireResponse fireAllOrgEmployees(Long id) {
         var ids = getIds(id);
@@ -86,17 +131,18 @@ public class SpringClient {
 
     private EmployeesList getEmployees(Long orgId) {
         try (var response = client.target(BASE_URL + "/organizations/" + orgId + "/employees?size=0")
-                .request()
+                .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
                 .get()) {
+            String xml = response.readEntity(String.class);
             if (response.getStatus() >= 400) {
-                throw new ApiException("Failed to get Employees:\n" + response.readEntity(String.class));
+                throw new ApiException("Failed to get Employees:\n" + xml);
             }
-            return response.readEntity(EmployeesList.class);
+            return readXml(xml, EmployeesList.class);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ClientException("Error during GET to /organizations/" + orgId + "/employees");
+            throw new ClientException("Error during GET to /organizations/" + orgId + "/employees: " + e.getMessage());
         }
     }
 
@@ -107,18 +153,17 @@ public class SpringClient {
     }
 
     private void deleteEmployees(List<Long> ids) {
-        var request = new IdRequest(ids);
         try (var response = client.target(BASE_URL + "/employees/batch/delete")
                 .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
-                .post(Entity.xml(request))) {
+                .post(Entity.entity(writeXml(ids), MediaType.APPLICATION_XML))) {
             if (response.getStatus() >= 400) {
                 throw new ApiException("Failed to delete Employees:\n" + response.readEntity(String.class));
             }
         } catch (ApiException e) {
             throw e;
         } catch (Exception ex) {
-            throw new ClientException("Error during POST to /employees/batch/delete");
+            throw new ClientException("Error during POST to /employees/batch/delete: " + ex.getMessage());
         }
     }
 
@@ -129,56 +174,61 @@ public class SpringClient {
         try (var response = client.target(BASE_URL + "/employees/batch/update")
                 .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
-                .post(Entity.xml(request))) {
+                .post(Entity.entity(writeXml(request), MediaType.APPLICATION_XML))) {
+            String xml = response.readEntity(String.class);
             if (response.getStatus() >= 400) {
-                throw new ClientException("Failed to transfer Employees:\n" + response.readEntity(String.class));
+                throw new ClientException("Failed to transfer Employees:\n" + xml);
             }
-            return response.readEntity(EmployeesList.class);
+            return readXml(xml, EmployeesList.class);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ClientException("Error during POST to /employees/batch/update");
+            throw new ClientException("Error during POST to /employees/batch/update: " + e.getMessage());
         }
     }
 
     private Organization updateTurnover(Float turnover, Organization organization) {
         var address = organization.getOfficialAddress() == null || organization.getOfficialAddress().getStreet() == null ?
                 null : organization.getOfficialAddress();
+        var requestObj = new OrganizationRequest(
+                organization.getName(),
+                organization.getCoordinates(),
+                turnover,
+                organization.getFullName(),
+                organization.getType(),
+                address
+        );
         try (var response = client.target(BASE_URL + "/organizations/" + organization.getId())
                 .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
-                .put(Entity.xml(new OrganizationRequest(
-                        organization.getName(),
-                        organization.getCoordinates(),
-                        turnover,
-                        organization.getFullName(),
-                        organization.getType(),
-                        address
-                )))) {
+                .put(Entity.entity(writeXml(requestObj), MediaType.APPLICATION_XML))) {
+            String xml = response.readEntity(String.class);
             if (response.getStatus() >= 400) {
-                throw new ClientException("Failed to update turnover:\n" + response.readEntity(String.class));
+                throw new ClientException("Failed to update turnover:\n" + xml);
             }
-            return response.readEntity(Organization.class);
+            return readXml(xml, Organization.class);
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ClientException("Error during PUT to /organizations/" + organization.getId());
+            throw new ClientException("Error during PUT to /organizations/" + organization.getId() + ": " + e.getMessage());
         }
     }
 
     private Organization getOrganization(Long id) {
         try (var response = client.target(BASE_URL + "/organizations/" + id)
-                .request()
+                .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
                 .get()) {
+            String xml = response.readEntity(String.class);
             if (response.getStatus() >= 400) {
-                throw new ApiException("Failed to get Organization:\n" + response.readEntity(String.class));
+                throw new ApiException("Failed to get Organization:\n" + xml);
             }
-            return response.readEntity(Organization.class);
+            return readXml(xml, Organization.class);
         } catch (ApiException e) {
             throw e;
         } catch (Exception ex) {
-            throw new ClientException("Error during GET to /organizations/" + id);
+            ex.printStackTrace();
+            throw new ClientException("Error during GET to /organizations/" + id + ": " + ex.getMessage());
         }
     }
 
@@ -202,14 +252,14 @@ public class SpringClient {
         try (var response = client.target(BASE_URL + "/organizations/compensate")
                 .request(MediaType.APPLICATION_XML)
                 .header("Connection", "close")
-                .post(Entity.xml(organization))) {
+                .post(Entity.entity(writeXml(organization), MediaType.APPLICATION_XML))) {
             if (response.getStatus() >= 400) {
                 throw new ApiException("Failed to create Organization" + ":\n" + response.readEntity(String.class));
             }
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new ClientException("Error during POST to /organizations/compensate");
+            throw new ClientException("Error during POST to /organizations/compensate: " + e.getMessage());
         }
     }
 

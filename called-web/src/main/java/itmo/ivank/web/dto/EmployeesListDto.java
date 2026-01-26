@@ -1,22 +1,25 @@
-package itmo.ivank.dto;
+package itmo.ivank.web.dto;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import itmo.ivank.ejb.entity.Employee;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "ArrayList")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class IdRequest {
-
+@JacksonXmlRootElement(localName = "employees")
+public class EmployeesListDto {
     @JacksonXmlElementWrapper(useWrapping = false)
-    @JacksonXmlProperty(localName = "item")
-    private List<Long> ids;
+    @JacksonXmlProperty(localName = "employee")
+    private List<Employee> employees;
 
+    public static EmployeesListDto from(itmo.ivank.ejb.dto.EmployeesList list) {
+        return new EmployeesListDto(list.employees());
+    }
 }
