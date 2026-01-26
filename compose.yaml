@@ -10,9 +10,12 @@ services:
       - '9992:9990'
       - '8081:8080'
     environment:
+      # EJB Pool Configuration - dynamically expandable
+      EJB_POOL_MAX: ${EJB_POOL_MAX:-50}
       JAVA_OPTS_APPEND: >
         -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
         -Djavax.net.ssl.trustStorePassword=changeit
+        -Dejb.pool.max=${EJB_POOL_MAX:-50}
     container_name: soa-called-ejb
     depends_on:
       - postgres

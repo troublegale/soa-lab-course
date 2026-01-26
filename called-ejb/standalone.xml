@@ -211,9 +211,16 @@
             </session-bean>
             <pools>
                 <bean-instance-pools>
-                    <!-- Configurable pool: min 5, max 50, dynamically expandable -->
-                    <strict-max-pool name="slsb-strict-max-pool" max-pool-size="50" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
-                    <strict-max-pool name="mdb-strict-max-pool" derive-size="from-cpu-count" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
+                    <!-- Configurable pool with dynamic expansion based on load -->
+                    <!-- Pool size configurable via system properties: ejb.pool.min (default 10), ejb.pool.max (default 100) -->
+                    <strict-max-pool name="slsb-strict-max-pool" 
+                                     max-pool-size="${ejb.pool.max:100}" 
+                                     instance-acquisition-timeout="5" 
+                                     instance-acquisition-timeout-unit="MINUTES"/>
+                    <strict-max-pool name="mdb-strict-max-pool" 
+                                     derive-size="from-cpu-count" 
+                                     instance-acquisition-timeout="5" 
+                                     instance-acquisition-timeout-unit="MINUTES"/>
                 </bean-instance-pools>
             </pools>
             <caches>
