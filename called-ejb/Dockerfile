@@ -17,6 +17,8 @@ FROM quay.io/wildfly/wildfly
 
 USER root
 
+# curl-minimal is already installed in the base image
+
 RUN /opt/jboss/wildfly/bin/add-user.sh -u wildfly -p wildfly! --silent
 
 # Install PostgreSQL JDBC driver
@@ -35,10 +37,12 @@ RUN chown -R jboss:jboss /opt/jboss/wildfly/modules/org/postgresql && \
     /opt/jboss/wildfly/standalone/configuration/truststore.jks \
     /opt/jboss/wildfly/standalone/deployments/called-ejb.jar
 
+# Copy entrypoint script for Consul registration
+COPY called-ejb/entrypoint.sh /opt/jboss/entrypoint.sh
+RUN chmod +x /opt/jboss/entrypoint.sh && chown jboss:jboss /opt/jboss/entrypoint.sh
+
 USER jboss
 
 EXPOSE 8080 8443 9990
 
-ENTRYPOINT exec /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 \
-  -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks \
-  -Djavax.net.ssl.trustStorePassword=changeit
+ENTRYPOINT ["/opt/jboss/entrypoint.sh"]
