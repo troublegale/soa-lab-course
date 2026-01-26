@@ -1,15 +1,46 @@
 services:
 
-  # Consul for Service Discovery
+  # Consul for Service Discovery (for called-ejb and called-web)
   consul:
     image: hashicorp/consul:1.15
     container_name: soa-consul
     ports:
-      - '8500:8500'   # HTTP API / UI
-      - '8600:8600/udp' # DNS
+      - '8500:8500'
+      - '8600:8600/udp'
     command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
     environment:
       CONSUL_BIND_INTERFACE: eth0
+
+  # Eureka Service Discovery (for Spring Cloud services)
+  eureka-server:
+    build: eureka-server
+    container_name: soa-eureka-server
+    ports:
+      - '8761:8761'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Spring Cloud Config Server
+  config-server:
+    build: config-server
+    container_name: soa-config-server
+    ports:
+      - '8888:8888'
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # EJB container with business logic
   called-ejb:
@@ -21,7 +52,6 @@ services:
       - '9992:9990'
       - '8081:8080'
     environment:
-      # EJB Pool Configuration - dynamically expandable
       EJB_POOL_MAX: ${EJB_POOL_MAX:-50}
       JAVA_OPTS_APPEND: >
         -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
@@ -51,19 +81,21 @@ services:
       - called-ejb
       - consul
 
-  # Caller service (JAX-RS)
-  jaxrs-wildfly:
-    build: jax-rs
+  # Caller service (Spring Cloud)
+  caller-service:
+    build: caller-service
     ports:
-      - '8445:8443'
-      - '9991:9990'
+      - '8445:8080'
     environment:
-      JAVA_OPTS_APPEND: >
-        -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
-        -Djavax.net.ssl.trustStorePassword=changeit
-    container_name: soa-jaxrs-wildfly
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      CALLED_SERVICE_URL: https://called-web:8443/soa/api/v1
+    container_name: soa-caller-service
     depends_on:
-      - called-web
+      config-server:
+        condition: service_healthy
+      called-web:
+        condition: service_started
 
   frontend:
     build: frontend
@@ -72,7 +104,7 @@ services:
     container_name: soa-frontend
     depends_on:
       - called-web
-      - jaxrs-wildfly
+      - caller-service
 
   postgres:
     image: 'postgres:latest'

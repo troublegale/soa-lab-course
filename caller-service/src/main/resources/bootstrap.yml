@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: caller-service
+
+eureka:
+  client:
+    enabled: false
