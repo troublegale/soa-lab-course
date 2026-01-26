@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- Console appender for Docker logs -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %c{1}: %m%n"/>
+        </Console>
+        <Console name="ConsoleLogUtil" target="SYSTEM_OUT">
+            <PatternLayout pattern="%m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- Mule flow loggers - show INFO level for our integration flows -->
+        <AsyncLogger name="org.mule.runtime.core.internal.processor.LoggerMessageProcessor" level="INFO"/>
+        
+        <!-- MuleSoft agent -->
+        <AsyncLogger name="com.mulesoft.agent" level="INFO"/>
+
+        <!-- Mule logging utilities -->
+        <AsyncLogger name="org.mule.runtime.core.internal.logging" additivity="false" level="INFO">
+            <AppenderRef ref="ConsoleLogUtil"/>
+        </AsyncLogger>
+        <AsyncLogger name="com.mulesoft.mule.runtime.module.reboot.license" additivity="false" level="INFO">
+            <AppenderRef ref="ConsoleLogUtil"/>
+        </AsyncLogger>
+
+        <!-- HTTP Connector - useful for debugging requests -->
+        <AsyncLogger name="org.mule.extension.http" level="INFO"/>
+        <AsyncLogger name="org.mule.service.http" level="INFO"/>
+        
+        <!-- Application flows - enable DEBUG for detailed tracing -->
+        <AsyncLogger name="org.mule.runtime.core.internal.processor" level="INFO"/>
+        
+        <!-- DataWeave -->
+        <AsyncLogger name="org.mule.weave" level="WARN"/>
+
+        <!-- Gateway -->
+        <AsyncLogger name="com.mulesoft.mule.runtime.gw" level="INFO"/>
+        <AsyncLogger name="com.mulesoft.extension.policies" level="INFO"/>
+        <AsyncLogger name="com.mulesoft.extension.gateway" level="INFO"/>
+        <AsyncLogger name="com.mulesoft.analytics" level="INFO"/>
+
+        <!-- Root logger - INFO level for container visibility -->
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+        </AsyncRoot>
+    </Loggers>
+</Configuration>

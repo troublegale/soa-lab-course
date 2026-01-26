@@ -1,9 +1,18 @@
 server:
   port: 8080
+  servlet:
+    context-path: /orgmanager
 
 spring:
   application:
-    name: zuul-gateway
+    name: rest-adapter
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: false
+
+soap-caller:
+  url: http://soap-caller:8080/soap/CallerService
 
 eureka:
   client:
@@ -13,15 +22,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    hostname: zuul-gateway
-
-zuul:
-  routes:
-    rest-adapter:
-      path: /orgmanager/**
-      serviceId: rest-adapter
-      strip-prefix: false
-  ribbon-isolation-strategy: thread
+    hostname: rest-adapter
 
 ribbon:
   eureka:
@@ -33,4 +34,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,routes
+        include: health,info,refresh

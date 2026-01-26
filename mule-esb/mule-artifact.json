@@ -1,0 +1,37 @@
+{
+  "minMuleVersion": "4.6.0",
+  "requiredProduct": "MULE_EE",
+  "configs": [
+    "integration-flows.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "mule-esb",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": []
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "dependencies": [
+    {
+      "groupId": "org.mule.connectors",
+      "artifactId": "mule-http-connector",
+      "version": "1.9.3",
+      "classifier": "mule-plugin",
+      "type": "jar"
+    },
+    {
+      "groupId": "org.mule.connectors",
+      "artifactId": "mule-sockets-connector",
+      "version": "1.2.4",
+      "classifier": "mule-plugin",
+      "type": "jar"
+    }
+  ]
+}

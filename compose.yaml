@@ -15,7 +15,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
   # Eureka Service Discovery (for Spring Cloud services)
   eureka-server:
@@ -74,7 +74,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 60s
+      start_period: 30s
 
   # Web container with REST endpoints
   called-web:
@@ -101,7 +101,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 60s
+      start_period: 30s
 
   # Caller service (Spring Cloud with Ribbon)
   caller-service:
@@ -112,6 +112,8 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       CALLED_SERVICE_URL: https://called-web:8443/soa/api/v1
     container_name: soa-caller-service
+    profiles:
+      - disabled
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -124,7 +126,71 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
+
+  # Mule ESB Integration Bus (SOAP Caller -> Called Service)
+  mule-esb:
+    build:
+      dockerfile: mule-esb/Dockerfile
+    ports:
+      - '8082:8082'
+    environment:
+      MULE_ENV: docker
+    container_name: soa-mule-esb
+    depends_on:
+      called-web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # SOAP Caller Service (WildFly with JAX-WS)
+  soap-caller:
+    build:
+      context: .
+      dockerfile: soap-caller/Dockerfile
+    ports:
+      - '8083:8080'
+      - '9993:9990'
+    environment:
+      MULE_ESB_HOST: mule-esb
+      MULE_ESB_PORT: 8082
+    container_name: soa-soap-caller
+    depends_on:
+      mule-esb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/jboss/wildfly/bin/jboss-cli.sh --connect --command=':read-attribute(name=server-state)' 2>/dev/null | grep -q running"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # REST Adapter (Spring Cloud - replaces caller-service in infrastructure)
+  rest-adapter:
+    build: rest-adapter
+    ports:
+      - '8445:8080'
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SOAP_CALLER_URL: http://soap-caller:8080/soap/CallerServiceService
+    container_name: soa-rest-adapter
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      soap-caller:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/orgmanager/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Zuul API Gateway (routes via Eureka with Ribbon load balancing)
   zuul-gateway:
@@ -137,7 +203,7 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
-      caller-service:
+      rest-adapter:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]

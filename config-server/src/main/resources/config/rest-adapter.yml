@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: rest-adapter
+
+app:
+  message: Hello from Config Server v2 - UPDATED DYNAMICALLY!
+
+# REST Adapter calls SOAP Caller Service
+soap-caller:
+  url: http://soap-caller:8080/soap/CallerServiceService
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true

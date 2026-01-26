@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+    <!-- =====================================================================
+         Mule ESB Integration Bus Configuration
+         
+         This ESB acts as an integration bus between:
+         - SOAP Service (calling service) - вызывающий сервис
+         - Called Web - вызываемый сервис
+         
+         Architecture:
+         REST Adapter -> SOAP Service -> Mule ESB (this) -> Called Web
+         ===================================================================== -->
+
+    <!-- ===================== Global Configurations ===================== -->
+    
+    <!-- HTTP Listener Config - receives requests from SOAP Service -->
+    <http:listener-config name="HTTP_Listener_config">
+        <http:listener-connection host="0.0.0.0" port="${http.port}"/>
+    </http:listener-config>
+
+    <!-- TLS Context for connecting to Called Web (HTTPS) -->
+    <tls:context name="TLS_Context">
+        <tls:trust-store insecure="true"/>
+    </tls:context>
+
+    <!-- HTTP Request Config for Called Web (HTTPS) -->
+    <http:request-config name="Called_Web_config">
+        <http:request-connection host="${called.web.host}" port="${called.web.port}" protocol="HTTPS">
+            <tls:context>
+                <tls:trust-store insecure="true"/>
+            </tls:context>
+        </http:request-connection>
+    </http:request-config>
+
+    <!-- ===================== Health Check Flow ===================== -->
+    
+    <flow name="health-check-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/health" allowedMethods="GET"/>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: "UP",
+    service: "mule-esb-integration-bus",
+    role: "Integration between SOAP Service and Called Web",
+    timestamp: now() as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+    <!-- ===================== Organization Proxy Flows ===================== -->
+    
+    <!-- GET /api/v1/organizations/{id} - Get organization by ID -->
+    <flow name="get-organization-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/organizations/{id}" allowedMethods="GET">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] GET organization: #[attributes.uriParams.id]"/>
+        
+        <http:request config-ref="Called_Web_config" method="GET" path="/soa/api/v1/organizations/{id}">
+            <http:headers><![CDATA[#[{'Accept': 'application/xml'}]]]></http:headers>
+            <http:uri-params><![CDATA[#[{'id': attributes.uriParams.id}]]]></http:uri-params>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] GET organization response received"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- PUT /api/v1/organizations/{id} - Update organization -->
+    <flow name="update-organization-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/organizations/{id}" allowedMethods="PUT">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] PUT organization: #[attributes.uriParams.id]"/>
+        
+        <http:request config-ref="Called_Web_config" method="PUT" path="/soa/api/v1/organizations/{id}">
+            <http:headers><![CDATA[#[{
+                'Content-Type': 'application/xml',
+                'Accept': 'application/xml'
+            }]]]></http:headers>
+            <http:uri-params><![CDATA[#[{'id': attributes.uriParams.id}]]]></http:uri-params>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] PUT organization response received"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- DELETE /api/v1/organizations/{id} - Delete organization -->
+    <flow name="delete-organization-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/organizations/{id}" allowedMethods="DELETE">
+            <http:response statusCode="#[vars.httpStatus default 204]"/>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] DELETE organization: #[attributes.uriParams.id]"/>
+        
+        <http:request config-ref="Called_Web_config" method="DELETE" path="/soa/api/v1/organizations/{id}">
+            <http:uri-params><![CDATA[#[{'id': attributes.uriParams.id}]]]></http:uri-params>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] DELETE organization completed"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/v1/organizations/compensate - Compensate (restore) organization -->
+    <flow name="compensate-organization-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/organizations/compensate" allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] POST compensate organization"/>
+        
+        <http:request config-ref="Called_Web_config" method="POST" path="/soa/api/v1/organizations/compensate">
+            <http:headers><![CDATA[#[{
+                'Content-Type': 'application/xml',
+                'Accept': 'application/xml'
+            }]]]></http:headers>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] Compensate organization response received"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- ===================== Employee Proxy Flows ===================== -->
+    
+    <!-- GET /api/v1/organizations/{orgId}/employees - Get employees by organization -->
+    <flow name="get-employees-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/organizations/{orgId}/employees" allowedMethods="GET">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] GET employees for organization: #[attributes.uriParams.orgId]"/>
+        
+        <http:request config-ref="Called_Web_config" method="GET" path="/soa/api/v1/organizations/{orgId}/employees">
+            <http:headers><![CDATA[#[{'Accept': 'application/xml'}]]]></http:headers>
+            <http:uri-params><![CDATA[#[{'orgId': attributes.uriParams.orgId}]]]></http:uri-params>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] GET employees response received"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/v1/employees/batch/update - Batch update employees -->
+    <flow name="batch-update-employees-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/employees/batch/update" allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] POST batch update employees"/>
+        
+        <http:request config-ref="Called_Web_config" method="POST" path="/soa/api/v1/employees/batch/update">
+            <http:headers><![CDATA[#[{
+                'Content-Type': 'application/xml',
+                'Accept': 'application/xml'
+            }]]]></http:headers>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] Batch update employees response received"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/v1/employees/batch/delete - Batch delete employees -->
+    <flow name="batch-delete-employees-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/employees/batch/delete" allowedMethods="POST">
+            <http:response statusCode="#[vars.httpStatus default 204]"/>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        
+        <logger level="INFO" message="[Mule ESB] POST batch delete employees"/>
+        
+        <http:request config-ref="Called_Web_config" method="POST" path="/soa/api/v1/employees/batch/delete">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/xml'}]]]></http:headers>
+        </http:request>
+        
+        <logger level="INFO" message="[Mule ESB] Batch delete employees completed"/>
+        
+        <error-handler>
+            <on-error-continue type="HTTP:NOT_FOUND">
+                <set-variable variableName="httpStatus" value="404"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-continue type="HTTP:BAD_REQUEST">
+                <set-variable variableName="httpStatus" value="400"/>
+                <set-payload value="#[error.errorMessage.payload]"/>
+            </on-error-continue>
+            <on-error-propagate type="ANY">
+                <set-variable variableName="httpStatus" value="500"/>
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- ===================== Error Handler ===================== -->
+    
+    <error-handler name="global-error-handler">
+        <!-- Handle HTTP errors from Called Web - propagate status code -->
+        <on-error-propagate type="HTTP:BAD_REQUEST">
+            <logger level="WARN" message="[Mule ESB] Bad Request: #[error.description]"/>
+            <set-variable variableName="httpStatus" value="400"/>
+            <ee:transform>
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+error.errorMessage.payload default {
+    appError: {
+        code: 400,
+        message: error.description default "Bad request"
+    }
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+        </on-error-propagate>
+        
+        <on-error-propagate type="HTTP:NOT_FOUND">
+            <logger level="WARN" message="[Mule ESB] Not Found: #[error.description]"/>
+            <set-variable variableName="httpStatus" value="404"/>
+            <ee:transform>
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+error.errorMessage.payload default {
+    appError: {
+        code: 404,
+        message: error.description default "Not found"
+    }
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+        </on-error-propagate>
+        
+        <on-error-propagate type="HTTP:UNAUTHORIZED, HTTP:FORBIDDEN">
+            <logger level="WARN" message="[Mule ESB] Auth Error: #[error.description]"/>
+            <set-variable variableName="httpStatus" value="403"/>
+            <ee:transform>
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+error.errorMessage.payload default {
+    appError: {
+        code: 403,
+        message: error.description default "Forbidden"
+    }
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+        </on-error-propagate>
+        
+        <on-error-propagate type="ANY">
+            <logger level="ERROR" message="[Mule ESB] Error: #[error.description]"/>
+            <ee:transform>
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+---
+{
+    appError: {
+        code: 500,
+        message: error.description default "Internal server error"
+    }
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+        </on-error-propagate>
+    </error-handler>
+
+</mule>

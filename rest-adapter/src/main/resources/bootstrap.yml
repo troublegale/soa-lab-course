@@ -1,15 +1,10 @@
-server:
-  port: 8080
-
 spring:
   application:
-    name: caller-service
-
-app:
-  message: Hello from Config Server v2 - UPDATED DYNAMICALLY!
-
-called-service:
-  url: https://called-web:8443/soa/api/v1
+    name: rest-adapter
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: false
 
 eureka:
   client:
@@ -19,3 +14,4 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+    hostname: rest-adapter
