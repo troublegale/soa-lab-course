@@ -39,7 +39,9 @@ RUN chown -R jboss:jboss /opt/jboss/wildfly/modules/org/postgresql && \
 
 # Copy entrypoint script for Consul registration
 COPY called-ejb/entrypoint.sh /opt/jboss/entrypoint.sh
-RUN chmod +x /opt/jboss/entrypoint.sh && chown jboss:jboss /opt/jboss/entrypoint.sh
+RUN sed -i 's/\r$//' /opt/jboss/entrypoint.sh && \
+    chmod +x /opt/jboss/entrypoint.sh && \
+    chown jboss:jboss /opt/jboss/entrypoint.sh
 
 USER jboss
 
