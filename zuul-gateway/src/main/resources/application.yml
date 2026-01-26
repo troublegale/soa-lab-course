@@ -1,18 +1,9 @@
 server:
   port: 8080
-  servlet:
-    context-path: /orgmanager
 
 spring:
   application:
-    name: caller-service
-  cloud:
-    config:
-      uri: http://config-server:8888
-      fail-fast: false
-
-called-service:
-  url: https://called-web:8443/soa/api/v1
+    name: zuul-gateway
 
 eureka:
   client:
@@ -22,7 +13,15 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    hostname: caller-service
+    hostname: zuul-gateway
+
+zuul:
+  routes:
+    caller-service:
+      path: /orgmanager/**
+      serviceId: caller-service
+      strip-prefix: false
+  ribbon-isolation-strategy: thread
 
 ribbon:
   eureka:
@@ -34,4 +33,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,refresh
+        include: health,info,routes

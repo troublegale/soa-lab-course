@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class CalledServiceClient {
@@ -146,7 +147,7 @@ public class CalledServiceClient {
         if (employees.getEmployees() == null) {
             return null;
         }
-        return employees.getEmployees().stream().map(Employee::getId).toList();
+        return employees.getEmployees().stream().map(Employee::getId).collect(Collectors.toList());
     }
 
     private void deleteEmployees(List<Long> ids) {
@@ -171,7 +172,7 @@ public class CalledServiceClient {
         EmployeeRequestList request = new EmployeeRequestList(employees.getEmployees()
                 .stream()
                 .map(e -> new EmployeeRequest(e.getId(), e.getName(), e.getSalary(), orgId))
-                .toList());
+                .collect(Collectors.toList()));
         try {
             String url = baseUrl + "/employees/batch/update";
             String xml = writeXml(request);

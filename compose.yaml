@@ -81,21 +81,40 @@ services:
       - called-ejb
       - consul
 
-  # Caller service (Spring Cloud)
+  # Caller service (Spring Cloud with Ribbon)
   caller-service:
     build: caller-service
     ports:
       - '8445:8080'
     environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       CALLED_SERVICE_URL: https://called-web:8443/soa/api/v1
     container_name: soa-caller-service
     depends_on:
-      config-server:
+      eureka-server:
         condition: service_healthy
       called-web:
         condition: service_started
+
+  # Zuul API Gateway (routes via Eureka with Ribbon load balancing)
+  zuul-gateway:
+    build: zuul-gateway
+    ports:
+      - '8090:8080'
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    container_name: soa-zuul-gateway
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      caller-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build: frontend
@@ -104,7 +123,7 @@ services:
     container_name: soa-frontend
     depends_on:
       - called-web
-      - caller-service
+      - zuul-gateway
 
   postgres:
     image: 'postgres:latest'
