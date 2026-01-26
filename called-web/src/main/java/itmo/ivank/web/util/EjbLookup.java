@@ -14,16 +14,28 @@ public class EjbLookup {
 
     private static final Logger logger = Logger.getLogger(EjbLookup.class.getName());
 
-    private static final String EJB_HOST = "called-ejb";
-    private static final String EJB_PORT = "8080";
-
     private static volatile OrganizationServiceRemote organizationService;
     private static volatile EmployeeServiceRemote employeeService;
+    private static volatile ConsulServiceDiscovery.ServiceEndpoint cachedEndpoint;
+
+    private static ConsulServiceDiscovery.ServiceEndpoint getEjbEndpoint() {
+        if (cachedEndpoint == null) {
+            synchronized (EjbLookup.class) {
+                if (cachedEndpoint == null) {
+                    cachedEndpoint = ConsulServiceDiscovery.discoverEjbService();
+                    logger.info("Discovered EJB service at: " + cachedEndpoint);
+                }
+            }
+        }
+        return cachedEndpoint;
+    }
 
     private static Context createContext() throws NamingException {
+        ConsulServiceDiscovery.ServiceEndpoint endpoint = getEjbEndpoint();
+        
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-        props.put(Context.PROVIDER_URL, "remote+http://" + EJB_HOST + ":" + EJB_PORT);
+        props.put(Context.PROVIDER_URL, "remote+http://" + endpoint.getHost() + ":" + endpoint.getPort());
         // Disable authentication - anonymous access
         props.put("jboss.naming.client.ejb.context", "true");
         return new InitialContext(props);

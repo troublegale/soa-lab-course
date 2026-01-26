@@ -41,12 +41,15 @@ services:
       - '8444:8443'
       - '9990:9990'
     environment:
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
       JAVA_OPTS_APPEND: >
         -Djavax.net.ssl.trustStore=/opt/jboss/wildfly/standalone/configuration/truststore.jks
         -Djavax.net.ssl.trustStorePassword=changeit
     container_name: soa-called-web
     depends_on:
       - called-ejb
+      - consul
 
   # Caller service (JAX-RS)
   jaxrs-wildfly:

@@ -33,7 +33,7 @@ public class OrganizationRequestDto {
     @Positive
     private Float annualTurnover;
 
-    @Pattern(regexp = "^(?!\\s*$).+")
+    @Pattern(regexp = "^$|^(?!\\s*$).+")
     @Size(max = 255)
     private String fullName;
 

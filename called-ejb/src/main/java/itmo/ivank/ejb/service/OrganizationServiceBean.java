@@ -254,7 +254,8 @@ public class OrganizationServiceBean implements OrganizationServiceRemote {
         return cb.and(predicates.toArray(new Predicate[0]));
     }
 
-    private <T extends Number> void addNumberFilter(CriteriaBuilder cb, Root<Organization> root,
+    @SuppressWarnings("unchecked")
+    private <T extends Number & Comparable<T>> void addNumberFilter(CriteriaBuilder cb, Root<Organization> root,
                                                      String fieldPath, NumberFilter<T> filter, List<Predicate> predicates) {
         if (filter == null) return;
         Path<T> path = resolvePath(root, fieldPath);
@@ -262,16 +263,16 @@ public class OrganizationServiceBean implements OrganizationServiceRemote {
             predicates.add(cb.equal(path, filter.eq()));
         }
         if (filter.gt() != null) {
-            predicates.add(cb.gt(path.as(Number.class), filter.gt()));
+            predicates.add(cb.greaterThan(path, filter.gt()));
         }
         if (filter.ge() != null) {
-            predicates.add(cb.ge(path.as(Number.class), filter.ge()));
+            predicates.add(cb.greaterThanOrEqualTo(path, filter.ge()));
         }
         if (filter.lt() != null) {
-            predicates.add(cb.lt(path.as(Number.class), filter.lt()));
+            predicates.add(cb.lessThan(path, filter.lt()));
         }
         if (filter.le() != null) {
-            predicates.add(cb.le(path.as(Number.class), filter.le()));
+            predicates.add(cb.lessThanOrEqualTo(path, filter.le()));
         }
     }
 

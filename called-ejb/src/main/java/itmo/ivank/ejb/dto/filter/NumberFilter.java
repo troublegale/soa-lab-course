@@ -2,7 +2,7 @@ package itmo.ivank.ejb.dto.filter;
 
 import java.io.Serializable;
 
-public record NumberFilter<T extends Number>(
+public record NumberFilter<T extends Number & Comparable<T>>(
         T eq,
         T gt,
         T ge,
